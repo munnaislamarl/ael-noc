@@ -47,6 +47,13 @@ function toNum(v) {
   return isNaN(n) ? v : n;
 }
 
+
+function numOr(v, fallback) {
+  if (v == null || String(v).trim() === "") return fallback;
+  return toNum(v);
+}
+
+
 function buildData(rows) {
   const get = (section, metric) => {
     const r = rows.find(x => x.length >= 3 && x[0] === section && x[1] === metric);
@@ -55,44 +62,44 @@ function buildData(rows) {
   const d = {
     generated: get("", "Generated") || SNAPSHOT.generated,
     devices: {
-      total: toNum(get("Devices", "Total devices")) || SNAPSHOT.devices.total,
-      up: toNum(get("Devices", "Up")) || SNAPSHOT.devices.up,
-      down: toNum(get("Devices", "Down")) || SNAPSHOT.devices.down,
-      unknown: toNum(get("Devices", "Unknown / not checked")) || SNAPSHOT.devices.unknown
+      total: numOr(get("Devices", "Total devices"), SNAPSHOT.devices.total),
+      up: numOr(get("Devices", "Up"), SNAPSHOT.devices.up),
+      down: numOr(get("Devices", "Down"), SNAPSHOT.devices.down),
+      unknown: numOr(get("Devices", "Unknown / not checked"), SNAPSHOT.devices.unknown)
     },
     downtimeMonth: {
       period: get("Downtime (running month)", "Period") || SNAPSHOT.downtimeMonth.period,
-      incidents: toNum(get("Downtime (running month)", "Incidents")) || SNAPSHOT.downtimeMonth.incidents,
-      devicesAffected: toNum(get("Downtime (running month)", "Devices affected")) || SNAPSHOT.downtimeMonth.devicesAffected,
-      hours: toNum(get("Downtime (running month)", "Total downtime (hours)")) || SNAPSHOT.downtimeMonth.hours,
-      minutes: toNum(get("Downtime (running month)", "Total downtime (min)")) || SNAPSHOT.downtimeMonth.minutes
+      incidents: numOr(get("Downtime (running month)", "Incidents"), SNAPSHOT.downtimeMonth.incidents),
+      devicesAffected: numOr(get("Downtime (running month)", "Devices affected"), SNAPSHOT.downtimeMonth.devicesAffected),
+      hours: numOr(get("Downtime (running month)", "Total downtime (hours)"), SNAPSHOT.downtimeMonth.hours),
+      minutes: numOr(get("Downtime (running month)", "Total downtime (min)"), SNAPSHOT.downtimeMonth.minutes)
     },
     downtimeAll: {
-      incidents: toNum(get("Downtime (all history)", "Incidents")) || SNAPSHOT.downtimeAll.incidents,
-      hours: toNum(get("Downtime (all history)", "Total downtime (hours)")) || SNAPSHOT.downtimeAll.hours,
-      minutes: toNum(get("Downtime (all history)", "Total downtime (min)")) || SNAPSHOT.downtimeAll.minutes
+      incidents: numOr(get("Downtime (all history)", "Incidents"), SNAPSHOT.downtimeAll.incidents),
+      hours: numOr(get("Downtime (all history)", "Total downtime (hours)"), SNAPSHOT.downtimeAll.hours),
+      minutes: numOr(get("Downtime (all history)", "Total downtime (min)"), SNAPSHOT.downtimeAll.minutes)
     },
     itAssets: {
-      total: toNum(get("IT Assets", "Total assets")) || SNAPSHOT.itAssets.total,
-      available: toNum(get("IT Assets", "Status: Available")) || SNAPSHOT.itAssets.available
+      total: numOr(get("IT Assets", "Total assets"), SNAPSHOT.itAssets.total),
+      available: numOr(get("IT Assets", "Status: Available"), SNAPSHOT.itAssets.available)
     },
     items: {
-      total: toNum(get("Item List", "Total items")) || SNAPSHOT.items.total,
-      sumRates: toNum(get("Item List", "Sum of rates (BDT)")) || SNAPSHOT.items.sumRates
+      total: numOr(get("Item List", "Total items"), SNAPSHOT.items.total),
+      sumRates: numOr(get("Item List", "Sum of rates (BDT)"), SNAPSHOT.items.sumRates)
     },
-    itMaintenance: { total: toNum(get("IT Maintenance", "Total records")) || SNAPSHOT.itMaintenance.total },
+    itMaintenance: { total: numOr(get("IT Maintenance", "Total records"), SNAPSHOT.itMaintenance.total) },
     itConsumption: {
-      total: toNum(get("IT Consumption", "Total records")) || SNAPSHOT.itConsumption.total,
-      totalCost: toNum(get("IT Consumption", "Total cost (BDT)")) || SNAPSHOT.itConsumption.totalCost
+      total: numOr(get("IT Consumption", "Total records"), SNAPSHOT.itConsumption.total),
+      totalCost: numOr(get("IT Consumption", "Total cost (BDT)"), SNAPSHOT.itConsumption.totalCost)
     },
-    users: { total: toNum(get("Users", "Total users")) || SNAPSHOT.users.total },
+    users: { total: numOr(get("Users", "Total users"), SNAPSHOT.users.total) },
     accessRequests: {
-      total: toNum(get("Access Requests", "Total")) || SNAPSHOT.accessRequests.total,
-      pending: toNum(get("Access Requests", "Pending")) || SNAPSHOT.accessRequests.pending,
-      approved: toNum(get("Access Requests", "Approved")) || SNAPSHOT.accessRequests.approved,
-      rejected: toNum(get("Access Requests", "Rejected")) || SNAPSHOT.accessRequests.rejected
+      total: numOr(get("Access Requests", "Total"), SNAPSHOT.accessRequests.total),
+      pending: numOr(get("Access Requests", "Pending"), SNAPSHOT.accessRequests.pending),
+      approved: numOr(get("Access Requests", "Approved"), SNAPSHOT.accessRequests.approved),
+      rejected: numOr(get("Access Requests", "Rejected"), SNAPSHOT.accessRequests.rejected)
     },
-    activity: { total: toNum(get("Activity Log", "Total events (stored)")) || SNAPSHOT.activity.total }
+    activity: { total: numOr(get("Activity Log", "Total events (stored)"), SNAPSHOT.activity.total) }
   };
   // generated time: try the Generated row (section empty)
   const genRow = rows.find(x => x.length >= 3 && x[1] === "Generated");
