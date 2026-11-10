@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Factory Network Monitor - Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="top">
+      <div>
+        <h1>Factory Network Monitor</h1>
+        <div class="sub">Live operational dashboard &middot; <span id="generated-at">Generated: -</span></div>
+      </div>
+      <div class="actions">
+        <span id="load-status" class="loading">Loading…</span>
+        <span id="status-badge" class="badge ok">-</span>
+        <button id="refresh-btn" class="primary">Refresh</button>
+      </div>
+    </header>
+
+    <section class="section">
+      <h2>Devices</h2>
+      <div class="grid kpi-grid">
+        <div class="card kpi accent-primary"><span class="label">Total Devices</span><span class="value" id="kpi-devices-total">-</span></div>
+        <div class="card kpi accent-success"><span class="label">Up</span><span class="value" id="kpi-devices-up">-</span><span class="hint"><span class="dot up"></span> online</span></div>
+        <div class="card kpi accent-danger"><span class="label">Down</span><span class="value" id="kpi-devices-down">-</span><span class="hint"><span class="dot down"></span> offline</span></div>
+        <div class="card kpi accent-warning"><span class="label">Unknown / Not Checked</span><span class="value" id="kpi-devices-unknown">-</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Downtime (Running Month)</h2>
+      <div class="grid kpi-grid">
+        <div class="card kpi accent-primary"><span class="label">Period</span><span class="value" style="font-size:1.1rem" id="dm-period">-</span></div>
+        <div class="card kpi accent-danger"><span class="label">Incidents</span><span class="value" id="kpi-dm-incidents">-</span></div>
+        <div class="card kpi accent-warning"><span class="label">Devices Affected</span><span class="value" id="kpi-dm-devices">-</span></div>
+        <div class="card kpi accent-purple"><span class="label">Total Downtime (hrs)</span><span class="value" id="kpi-dm-hours">-</span></div>
+        <div class="card kpi accent-teal"><span class="label">Total Downtime (min)</span><span class="value" id="kpi-dm-minutes">-</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Downtime (All History)</h2>
+      <div class="grid kpi-grid">
+        <div class="card kpi accent-danger"><span class="label">Incidents</span><span class="value" id="kpi-da-incidents">-</span></div>
+        <div class="card kpi accent-purple"><span class="label">Total Downtime (hrs)</span><span class="value" id="kpi-da-hours">-</span></div>
+        <div class="card kpi accent-teal"><span class="label">Total Downtime (min)</span><span class="value" id="kpi-da-minutes">-</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Charts</h2>
+      <div class="grid charts">
+        <div class="card chart-card"><canvas id="chart-devices"></canvas></div>
+        <div class="card chart-card"><canvas id="chart-access"></canvas></div>
+        <div class="card chart-card"><canvas id="chart-downtime"></canvas></div>
+        <div class="card chart-card"><canvas id="chart-it"></canvas></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>IT Assets &amp; Inventory</h2>
+      <div class="grid kpi-grid">
+        <div class="card kpi accent-primary"><span class="label">Total Assets</span><span class="value" id="kpi-assets-total">-</span></div>
+        <div class="card kpi accent-success"><span class="label">Available</span><span class="value" id="kpi-assets-avail">-</span></div>
+        <div class="card kpi accent-primary"><span class="label">Total Items</span><span class="value" id="kpi-items-total">-</span></div>
+        <div class="card kpi accent-teal"><span class="label">Sum of Rates (BDT)</span><span class="value" style="font-size:1.4rem" id="kpi-items-sum">-</span></div>
+        <div class="card kpi accent-warning"><span class="label">IT Maintenance Records</span><span class="value" id="kpi-maint">-</span></div>
+        <div class="card kpi accent-danger"><span class="label">IT Consumption Records</span><span class="value" id="kpi-cons-records">-</span></div>
+        <div class="card kpi accent-purple"><span class="label">Consumption Cost (BDT)</span><span class="value" style="font-size:1.4rem" id="kpi-cons-cost">-</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Users &amp; Access</h2>
+      <div class="grid kpi-grid">
+        <div class="card kpi accent-primary"><span class="label">Total Users</span><span class="value" id="kpi-users">-</span></div>
+        <div class="card kpi accent-primary"><span class="label">Access Requests (Total)</span><span class="value" id="kpi-ar-total">-</span></div>
+        <div class="card kpi accent-warning"><span class="label">Pending</span><span class="value" id="kpi-ar-pending">-</span></div>
+        <div class="card kpi accent-success"><span class="label">Approved</span><span class="value" id="kpi-ar-approved">-</span></div>
+        <div class="card kpi accent-danger"><span class="label">Rejected</span><span class="value" id="kpi-ar-rejected">-</span></div>
+        <div class="card kpi accent-teal"><span class="label">Activity Events (stored)</span><span class="value" id="kpi-activity">-</span></div>
+      </div>
+    </section>
+
+    <footer>
+      Data source: Google Sheets (Factory Network Monitor). Dashboard is static HTML hosted on GitHub Pages.
+    </footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+  </html>
