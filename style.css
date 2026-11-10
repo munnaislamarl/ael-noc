@@ -72,6 +72,14 @@ tr:hover td { background: #f8fafc; }
 .dot.up { background: var(--success); }
 .dot.down { background: var(--danger); }
 .dot.unknown { background: var(--muted); }
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
+.filter-grid label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); }
+.filter-grid input, .filter-grid select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: .9rem; }
+.filter-actions { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+.pagination { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+.pagination button { padding: 6px 12px; }
+.pagination .page-info { color: var(--muted); font-size: .85rem; }
+.table-wrap table { min-width: 700px; }
 footer { margin-top: 32px; color: var(--muted); font-size: .8rem; text-align: center; }
 @media (max-width: 640px) {
   .container { padding: 16px; }

@@ -52,6 +52,75 @@
     </section>
 
     <section class="section">
+      <h2>Filters</h2>
+      <div class="card">
+        <div class="filter-grid">
+          <label>Date from <input type="date" id="f-date-from"></label>
+          <label>Date to <input type="date" id="f-date-to"></label>
+          <label>Device <input type="text" id="f-device" placeholder="Device name"></label>
+          <label>Type <select id="f-type"><option value="">All</option></select></label>
+          <label>State <select id="f-state"><option value="">All</option><option value="closed">closed</option><option value="ongoing">ongoing</option></select></label>
+          <label>Location <input type="text" id="f-location" placeholder="Location"></label>
+        </div>
+        <div class="filter-actions">
+          <button id="apply-filters" class="primary">Apply</button>
+          <button id="reset-filters">Reset</button>
+          <span id="filter-status" class="loading"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Downtime Incidents (filtered)</h2>
+      <div class="grid kpi-grid" id="incident-kpis">
+        <div class="card kpi accent-danger"><span class="label">Incidents</span><span class="value" id="kpi-f-incidents">-</span></div>
+        <div class="card kpi accent-warning"><span class="label">Devices Affected</span><span class="value" id="kpi-f-devices">-</span></div>
+        <div class="card kpi accent-teal"><span class="label">Total Downtime (min)</span><span class="value" id="kpi-f-minutes">-</span></div>
+        <div class="card kpi accent-purple"><span class="label">Ongoing</span><span class="value" id="kpi-f-ongoing">-</span></div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table id="incidents-table">
+            <thead><tr>
+              <th>Device</th><th>IP address</th><th>Type</th><th>Location</th><th>Down from</th><th>Back up at</th><th>Duration</th><th>State</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="incidents-pagination"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Date-wise Incidents</h2>
+      <div class="card chart-card"><canvas id="chart-date-incidents"></canvas></div>
+      <div class="card">
+        <div class="table-wrap">
+          <table id="date-incidents-table">
+            <thead><tr>
+              <th>Date</th><th>Incidents</th><th>Devices Affected</th><th>Total Downtime</th><th>Total Downtime (min)</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Device-wise Downtime</h2>
+      <div class="card">
+        <div class="table-wrap">
+          <table id="device-downtime-table">
+            <thead><tr>
+              <th>Device</th><th>IP address</th><th>Type</th><th>Location</th><th>Down (times)</th><th>Total downtime</th><th>Downtime (min)</th><th>Longest outage</th><th>First down</th><th>Last down</th><th>Now</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
       <h2>Charts</h2>
       <div class="grid charts">
         <div class="card chart-card"><canvas id="chart-devices"></canvas></div>
@@ -92,4 +161,4 @@
   </div>
   <script src="app.js"></script>
 </body>
-  </html>
+</html>
