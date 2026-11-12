@@ -1030,6 +1030,39 @@ function renderMaintenanceTable() {
   });
 }
 
+/* Monthly uptime (current month, month-to-date) per device.
+   Built from the Downtime Incidents sheet: overlap of each incident
+   with [month start, now], then uptime = 1 - down/elapsed. */
+function computeMonthlyUptimeMap() {
+  const map = {};
+  const now = Date.now();
+  const d = new Date();
+  const monthStart = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+  const elapsedMin = Math.max(1, (now - monthStart) / 60000);
+  const downMin = {};
+  INCIDENTS.forEach(inc => {
+    if (!inc || !inc.device || !inc.downDate || isNaN(inc.downDate.getTime())) return;
+    const startMs = inc.downDate.getTime();
+    let endMs;
+    if (inc.backUp) {
+      const e = new Date(inc.backUp.replace(" ", "T"));
+      endMs = isNaN(e.getTime()) ? now : e.getTime();
+    } else {
+      endMs = now; // ongoing outage
+    }
+    const from = Math.max(startMs, monthStart);
+    const to = Math.min(endMs, now);
+    if (to <= from) return;
+    const key = inc.device.trim();
+    downMin[key] = (downMin[key] || 0) + (to - from) / 60000;
+  });
+  Object.keys(downMin).forEach(k => {
+    const pct = (1 - downMin[k] / elapsedMin) * 100;
+    map[k] = Math.max(0, Math.min(100, pct));
+  });
+  return map;
+}
+
 function renderDevicesTable() {
   const tbody = document.querySelector("#devices-table tbody");
   if (!tbody) return;
@@ -1055,8 +1088,23 @@ function renderDevicesTable() {
   const shown = list.length;
   const countEl = document.getElementById("dev-count");
   if (countEl) countEl.textContent = "Showing " + shown + " of " + total;
+  // Current-month uptime per device (from this month's downtime incidents)
+  const monthUptime = computeMonthlyUptimeMap();
+  const hasIncidents = INCIDENTS.length > 0;
+  const monthLabel = (function(){ const n = new Date(); return n.toLocaleString("en", { month: "long", year: "numeric" }); })();
   list.forEach(d => {
+    const key = (d.name || "").trim();
+    let muText;
+    if (hasIncidents) {
+      const mu = monthUptime[key];
+      muText = (mu === undefined ? 100 : mu).toFixed(2) + "%";
+    } else {
+      // fallback: Downtime Report availability (also month-scoped in the sheet)
+      const rep = DOWNTIME_REPORT.find(x => (x.device || "").trim() === key);
+      muText = rep && rep.availability ? escapeHtml(rep.availability) : "-";
+    }
     const tr = document.createElement("tr");
+    tr.title = "Uptime for " + monthLabel + " (month to date)";
     tr.innerHTML = `
       <td>${escapeHtml(d.no)}</td>
       <td>${escapeHtml(d.name)}</td>
@@ -1066,6 +1114,7 @@ function renderDevicesTable() {
       <td><span class="badge ${d.status.toLowerCase() === "up" ? "ok" : "down"}">${escapeHtml(d.status)}</span></td>
       <td>${escapeHtml(d.response)}</td>
       <td>${escapeHtml(d.uptime)}</td>
+      <td class="mu">${muText}</td>
       <td>${escapeHtml(d.lastChecked)}</td>
     `;
     tbody.appendChild(tr);
@@ -1823,12 +1872,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Reset buttons
   const resetDev = document.getElementById("reset-dev");
   if (resetDev) resetDev.addEventListener("click", () => { document.getElementById("dev-search").value=""; document.getElementById("dev-status").value=""; document.getElementById("dev-type").value=""; renderDevicesTable(); });
-  const devRefresh = document.getElementById("dev-refresh");
-  if (devRefresh) devRefresh.addEventListener("click", () => { loadData(); });
-  const devImport = document.getElementById("dev-import");
-  if (devImport) devImport.addEventListener("click", () => { const st = document.getElementById("dev-status-msg"); if (st) { st.textContent = "Import not available in static mode"; st.className = "error"; } });
-  const devAdd = document.getElementById("dev-add");
-  if (devAdd) devAdd.addEventListener("click", () => { const st = document.getElementById("dev-status-msg"); if (st) { st.textContent = "Add Device not available in static mode"; st.className = "error"; } });
   const resetMaint = document.getElementById("reset-maint");
   if (resetMaint) resetMaint.addEventListener("click", () => { document.getElementById("m-search").value=""; document.getElementById("m-status").value=""; document.getElementById("m-type").value=""; document.getElementById("m-month").value=""; renderMaintenanceTable(); });
   const resetDr = document.getElementById("reset-dr");
