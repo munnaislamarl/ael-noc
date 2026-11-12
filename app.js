@@ -1036,8 +1036,9 @@ function renderDevicesTable() {
   const q = (document.getElementById("dev-search")?.value || "").toLowerCase();
   const st = (document.getElementById("dev-status")?.value || "").toLowerCase();
   const ty = (document.getElementById("dev-type")?.value || "").toLowerCase();
+  const sort = (document.getElementById("dev-sort")?.value || "import");
   tbody.innerHTML = "";
-  DEVICES.filter(d => {
+  let list = DEVICES.filter(d => {
     if (q) {
       const hay = (d.name + " " + d.ip + " " + d.type + " " + d.location).toLowerCase();
       if (!hay.includes(q)) return false;
@@ -1045,7 +1046,16 @@ function renderDevicesTable() {
     if (st && d.status.toLowerCase() !== st) return false;
     if (ty && d.type.toLowerCase() !== ty) return false;
     return true;
-  }).forEach(d => {
+  });
+  if (sort === "name") list.sort((a,b) => (a.name||"").localeCompare(b.name||""));
+  else if (sort === "status") list.sort((a,b) => (a.status||"").localeCompare(b.status||""));
+  else if (sort === "ip") list.sort((a,b) => (a.ip||"").localeCompare(b.ip||""));
+  // import order = original order (already)
+  const total = DEVICES.length;
+  const shown = list.length;
+  const countEl = document.getElementById("dev-count");
+  if (countEl) countEl.textContent = "Showing " + shown + " of " + total;
+  list.forEach(d => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(d.no)}</td>
@@ -1482,7 +1492,12 @@ async function loadData() {
       if (devType) {
         const types = [...new Set(DEVICES.map(d => d.type).filter(Boolean))].sort();
         while (devType.options.length > 1) devType.remove(1);
-        types.forEach(t => { const o = document.createElement("option"); o.value = t; o.textContent = t; devType.appendChild(o); });
+        // update "All types" option count
+        if (devType.options.length > 0) devType.options[0].textContent = "All types (" + DEVICES.length + ")";
+        types.forEach(t => {
+          const cnt = DEVICES.filter(d => d.type === t).length;
+          const o = document.createElement("option"); o.value = t; o.textContent = t + " (" + cnt + ")"; devType.appendChild(o);
+        });
       }
       const mStatus = document.getElementById("m-status");
       if (mStatus) {
@@ -1789,7 +1804,7 @@ document.addEventListener("DOMContentLoaded", () => {
   bindAuto(["c-date-from","c-date-to","c-item","c-warehouse","c-mill","c-month"], applyConsumptionFilters);
   bindAuto(["a-search","a-status","a-category","a-brand","a-plant","a-month"], applyAssetsFilters);
   bindAuto(["i-search","i-category","i-warehouse","i-month"], applyItemsFilters);
-  bindAuto(["dev-search","dev-status","dev-type"], renderDevicesTable);
+  bindAuto(["dev-search","dev-status","dev-type","dev-sort"], renderDevicesTable);
   bindAuto(["m-search","m-status","m-type","m-month"], renderMaintenanceTable);
   bindAuto(["log-search","log-kind","log-month"], renderActivityTable);
   bindAuto(["u-search","u-role","u-month"], renderUsersTable);
@@ -1808,6 +1823,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // Reset buttons
   const resetDev = document.getElementById("reset-dev");
   if (resetDev) resetDev.addEventListener("click", () => { document.getElementById("dev-search").value=""; document.getElementById("dev-status").value=""; document.getElementById("dev-type").value=""; renderDevicesTable(); });
+  const devRefresh = document.getElementById("dev-refresh");
+  if (devRefresh) devRefresh.addEventListener("click", () => { loadData(); });
+  const devImport = document.getElementById("dev-import");
+  if (devImport) devImport.addEventListener("click", () => { const st = document.getElementById("dev-status-msg"); if (st) { st.textContent = "Import not available in static mode"; st.className = "error"; } });
+  const devAdd = document.getElementById("dev-add");
+  if (devAdd) devAdd.addEventListener("click", () => { const st = document.getElementById("dev-status-msg"); if (st) { st.textContent = "Add Device not available in static mode"; st.className = "error"; } });
   const resetMaint = document.getElementById("reset-maint");
   if (resetMaint) resetMaint.addEventListener("click", () => { document.getElementById("m-search").value=""; document.getElementById("m-status").value=""; document.getElementById("m-type").value=""; document.getElementById("m-month").value=""; renderMaintenanceTable(); });
   const resetDr = document.getElementById("reset-dr");

@@ -114,15 +114,22 @@
         <!-- Device List -->
         <section class="section" data-page="devices">
           <h2>Device List</h2>
+          <p style="color:var(--muted);font-size:.9rem;margin:0 0 10px;">All monitored network devices with live status.</p>
           <div class="card">
+            <div class="filter-actions" style="margin-bottom:8px;">
+              <button id="dev-refresh" class="primary">Refresh</button>
+              <button id="dev-import">Import</button>
+              <button id="dev-add">Add Device</button>
+            </div>
             <div class="filter-grid">
-              <label>Search <input type="text" id="dev-search" placeholder="Name/IP/Type/Location"></label>
+              <label>Type <select id="dev-type"><option value="">All types (0)</option></select></label>
               <label>Status <select id="dev-status"><option value="">All</option><option>UP</option><option>DOWN</option></select></label>
-              <label>Type <select id="dev-type"><option value="">All</option></select></label>
+              <label>Search <input type="text" id="dev-search" placeholder="Search name / IP / location"></label>
+              <label>Sort <select id="dev-sort"><option value="import">List order (import sequence)</option><option value="name">Name</option><option value="status">Status</option><option value="ip">IP</option></select></label>
             </div>
             <div class="filter-actions">
-              <button id="reset-dev" class="primary">Reset</button>
-              <span id="dev-status-msg" class="loading"></span>
+              <button id="reset-dev">↺ Reset</button>
+              <span id="dev-count" class="page-info" style="margin-left:auto;">Showing 0 of 0</span>
             </div>
           </div>
           <div class="card">
