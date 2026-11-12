@@ -142,7 +142,7 @@ let consumptionFilters = { from: "", to: "", item: "", warehouse: "", mill: "", 
 let consumptionPage = 1;
 let assetsFilters = { search: "", status: "", category: "", brand: "", plant: "", month: "" };
 let assetsPage = 1;
-let itemsFilters = { search: "", category: "", warehouse: "", month: "" };
+let itemsFilters = { search: "", category: "", warehouse: "" };
 let itemsPage = 1;
 const PAGE_SIZE = 50;
 
@@ -958,11 +958,7 @@ function getFilteredItems() {
 }
 
 function renderItemsKPIs(list) {
-  const cats = new Set(list.map(x => x.category));
-  const sum = list.reduce((a, b) => a + (b.rate || 0), 0);
   document.getElementById("kpi-i-total").textContent = fmt(list.length);
-  document.getElementById("kpi-i-sum").textContent = money(sum);
-  document.getElementById("kpi-i-cats").textContent = fmt(cats.size);
 }
 
 function renderItemsTable() {
@@ -1837,7 +1833,6 @@ async function loadData() {
     populateItemsFilters();
     populateMonthSelect("c-month", CONSUMPTION.map(x => x.date));
     populateMonthSelect("a-month", ASSETS.map(x => x.created));
-    populateMonthSelect("i-month", ITEMS.map(x => x.created));
 
     populateMonthSelect("m-month", MAINTENANCE.map(x => x.date));
     populateMonthSelect("dr-month", DOWNTIME_REPORT.map(x => x.firstDown));
@@ -2033,7 +2028,6 @@ function applyItemsFilters() {
   itemsFilters.search = document.getElementById("i-search").value.trim();
   itemsFilters.category = document.getElementById("i-category").value;
   itemsFilters.warehouse = document.getElementById("i-warehouse").value.trim();
-  itemsFilters.month = document.getElementById("i-month").value;
   itemsPage = 1;
   const st = document.getElementById("items-status");
   if (st) { st.textContent = "Filtered"; st.className = ""; }
@@ -2044,7 +2038,6 @@ function resetItemsFilters() {
   document.getElementById("i-search").value = "";
   document.getElementById("i-category").value = "";
   document.getElementById("i-warehouse").value = "";
-  document.getElementById("i-month").value = "";
   itemsPage = 1;
   const st = document.getElementById("items-status");
   if (st) { st.textContent = "Filters reset"; st.className = ""; }
@@ -2170,7 +2163,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   bindAuto(["c-date-from","c-date-to","c-item","c-warehouse","c-mill","c-month"], applyConsumptionFilters);
   bindAuto(["a-search","a-status","a-category","a-brand","a-plant","a-month"], applyAssetsFilters);
-  bindAuto(["i-search","i-category","i-warehouse","i-month"], applyItemsFilters);
+  bindAuto(["i-search","i-category","i-warehouse"], applyItemsFilters);
   bindAuto(["dev-search","dev-status","dev-type","dev-sort"], renderDevicesTable);
   bindAuto(["m-search","m-status","m-type","m-month"], renderMaintenanceTable);
   bindAuto(["u-search","u-role","u-month"], renderUsersTable);
@@ -2200,8 +2193,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById("dr-to")) document.getElementById("dr-to").value = "";
     renderDowntimeReportTable();
   });
-  const showDr = document.getElementById("dr-show");
-  if (showDr) showDr.addEventListener("click", renderDowntimeReportTable);
   const drView = document.getElementById("dr-view");
   if (drView) drView.addEventListener("change", renderDowntimeReportTable);
   // quick date buttons

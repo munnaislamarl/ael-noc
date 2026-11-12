@@ -157,7 +157,9 @@ footer { margin-top: 32px; color: var(--muted); font-size: .8rem; text-align: ce
 .log-quick-btn { background: var(--card); }
 .ev-badge { display: inline-block; padding: 2px 9px; border-radius: 6px; font-size: .72rem; font-weight: 700; color: #fff; }
 .ev-up { background: #16a34a; } .ev-down { background: #ef4444; } .ev-admin { background: #7c3aed; }
-#activity-table th { position: sticky; top: calc(var(--header-h, 76px)); }
+/* Log report: table scrolls inside its own box so the sticky header stays at the top of the table */
+.log-wrap { max-height: calc(100vh - var(--header-h, 76px) - 120px); overflow: auto; }
+#activity-table th { position: sticky; top: 0; z-index: 2; background: #eef2f7; box-shadow: 0 1px 0 var(--border); }
 
 /* Device incident modal */
 .dm-overlay { position: fixed; inset: 0; z-index: 900; background: rgba(15,23,42,.5); display: none; align-items: center; justify-content: center; padding: 16px; }
@@ -185,3 +187,14 @@ footer { margin-top: 32px; color: var(--muted); font-size: .8rem; text-align: ce
 .dm-table td { padding: 8px 10px; }
 .dm-dur { color: #ef4444; font-weight: 600; }
 @media (max-width: 700px) { .dm-stats { grid-template-columns: repeat(2, 1fr); } .dm-modal { padding: 14px; } }
+
+/* Reset buttons: orange border so they are easy to spot everywhere */
+button[id^="reset-"], button.primary[id^="reset-"] {
+  background: #fff; color: #c2410c; border: 2px solid #f97316; font-weight: 600;
+}
+button[id^="reset-"]:hover, button.primary[id^="reset-"]:hover { background: #fff7ed; border-color: #ea580c; color: #9a3412; }
+
+/* Item List: Total Items on the right side of the Apply / Reset row */
+.total-items-box { margin-left: auto; display: flex; align-items: baseline; gap: 10px; border-left: 3px solid var(--primary); padding: 4px 4px 4px 10px; }
+.total-items-box .label { color: var(--muted); font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; }
+.total-items-box .value { font-size: 1.4rem; font-weight: 700; line-height: 1; }

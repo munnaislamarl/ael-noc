@@ -184,18 +184,13 @@
               <label>Search <input type="text" id="i-search" placeholder="Code/Item/Category"></label>
               <label>Category <select id="i-category"><option value="">All</option></select></label>
               <label>Warehouse <input type="text" id="i-warehouse" placeholder="Warehouse"></label>
-              <label>Month <select id="i-month"><option value="">All</option></select></label>
             </div>
             <div class="filter-actions">
               <button id="apply-items" class="primary">Apply</button>
               <button id="reset-items">Reset</button>
               <span id="items-status" class="loading"></span>
+              <div class="total-items-box"><span class="label">Total Items</span><span class="value" id="kpi-i-total">-</span></div>
             </div>
-          </div>
-          <div class="grid kpi-grid">
-            <div class="card kpi accent-primary"><span class="label">Total Items</span><span class="value" id="kpi-i-total">-</span></div>
-            <div class="card kpi accent-teal"><span class="label">Sum of Rates (BDT)</span><span class="value" id="kpi-i-sum">-</span></div>
-            <div class="card kpi accent-success"><span class="label">Unique Categories</span><span class="value" id="kpi-i-cats">-</span></div>
           </div>
           <div class="card">
             <div class="table-wrap">
@@ -287,8 +282,6 @@
               <label>To <input type="date" id="dr-to"></label>
             </div>
             <div class="filter-actions">
-              <button id="dr-show" class="primary">Show report</button>
-              <button id="reset-dr">↺ Reset</button>
               <button class="quick-btn" data-range="today">Today</button>
               <button class="quick-btn" data-range="yesterday">Yesterday</button>
               <button class="quick-btn" data-range="7">Last 7 days</button>
@@ -296,6 +289,7 @@
               <button class="quick-btn" data-range="30">Last 30 days</button>
               <button class="quick-btn" data-range="month">This month</button>
               <span id="dr-status-msg" class="loading"></span>
+              <button id="reset-dr" style="margin-left:auto;">↺ Reset</button>
             </div>
             <div class="filter-actions" style="margin-top:6px;">
               <span class="page-info">Period: <b id="dr-period">-</b></span>
@@ -373,7 +367,7 @@
             <div class="card kpi accent-purple"><span class="label">Admin actions</span><span class="value" id="log-admin">0</span></div>
           </div>
           <div class="card">
-            <div class="table-wrap">
+            <div class="table-wrap log-wrap">
               <table id="activity-table">
                 <thead><tr>
                   <th>#</th><th>Date &amp; time</th><th>Event</th><th>Device</th><th>Type</th><th>Message</th>
