@@ -977,6 +977,109 @@ async function loadData() {
   }
 }
 
+function applyIncidentFilters() {
+  incidentFilters.from = document.getElementById("f-date-from").value;
+  incidentFilters.to = document.getElementById("f-date-to").value;
+  incidentFilters.device = document.getElementById("f-device").value.trim();
+  incidentFilters.type = document.getElementById("f-type").value;
+  incidentFilters.state = document.getElementById("f-state").value;
+  incidentFilters.location = document.getElementById("f-location").value.trim();
+  incidentFilters.month = document.getElementById("f-month").value;
+  incidentPage = 1;
+  const st = document.getElementById("filter-status");
+  if (st) { st.textContent = "Filtered"; st.className = ""; }
+  renderIncidentsTable();
+  renderDateIncidents();
+  renderDeviceDowntime();
+}
+function resetIncidentFilters() {
+  incidentFilters = { from: "", to: "", device: "", type: "", state: "", location: "", month: "" };
+  document.getElementById("f-date-from").value = "";
+  document.getElementById("f-date-to").value = "";
+  document.getElementById("f-device").value = "";
+  document.getElementById("f-type").value = "";
+  document.getElementById("f-state").value = "";
+  document.getElementById("f-location").value = "";
+  document.getElementById("f-month").value = "";
+  incidentPage = 1;
+  const st = document.getElementById("filter-status");
+  if (st) { st.textContent = "Filters reset"; st.className = ""; }
+  renderIncidentsTable();
+  renderDateIncidents();
+  renderDeviceDowntime();
+}
+function applyConsumptionFilters() {
+  consumptionFilters.from = document.getElementById("c-date-from").value;
+  consumptionFilters.to = document.getElementById("c-date-to").value;
+  consumptionFilters.item = document.getElementById("c-item").value.trim();
+  consumptionFilters.warehouse = document.getElementById("c-warehouse").value.trim();
+  consumptionFilters.mill = document.getElementById("c-mill").value.trim();
+  consumptionFilters.month = document.getElementById("c-month").value;
+  consumptionPage = 1;
+  const st = document.getElementById("consumption-status");
+  if (st) { st.textContent = "Filtered"; st.className = ""; }
+  renderConsumptionTable();
+}
+function resetConsumptionFilters() {
+  consumptionFilters = { from: "", to: "", item: "", warehouse: "", mill: "", month: "" };
+  document.getElementById("c-date-from").value = "";
+  document.getElementById("c-date-to").value = "";
+  document.getElementById("c-item").value = "";
+  document.getElementById("c-warehouse").value = "";
+  document.getElementById("c-mill").value = "";
+  document.getElementById("c-month").value = "";
+  consumptionPage = 1;
+  const st = document.getElementById("consumption-status");
+  if (st) { st.textContent = "Filters reset"; st.className = ""; }
+  renderConsumptionTable();
+}
+function applyAssetsFilters() {
+  assetsFilters.search = document.getElementById("a-search").value.trim();
+  assetsFilters.status = document.getElementById("a-status").value;
+  assetsFilters.category = document.getElementById("a-category").value;
+  assetsFilters.brand = document.getElementById("a-brand").value.trim();
+  assetsFilters.plant = document.getElementById("a-plant").value.trim();
+  assetsFilters.month = document.getElementById("a-month").value;
+  assetsPage = 1;
+  const st = document.getElementById("assets-status");
+  if (st) { st.textContent = "Filtered"; st.className = ""; }
+  renderAssetsTable();
+}
+function resetAssetsFilters() {
+  assetsFilters = { search: "", status: "", category: "", brand: "", plant: "", month: "" };
+  document.getElementById("a-search").value = "";
+  document.getElementById("a-status").value = "";
+  document.getElementById("a-category").value = "";
+  document.getElementById("a-brand").value = "";
+  document.getElementById("a-plant").value = "";
+  document.getElementById("a-month").value = "";
+  assetsPage = 1;
+  const st = document.getElementById("assets-status");
+  if (st) { st.textContent = "Filters reset"; st.className = ""; }
+  renderAssetsTable();
+}
+function applyItemsFilters() {
+  itemsFilters.search = document.getElementById("i-search").value.trim();
+  itemsFilters.category = document.getElementById("i-category").value;
+  itemsFilters.warehouse = document.getElementById("i-warehouse").value.trim();
+  itemsFilters.month = document.getElementById("i-month").value;
+  itemsPage = 1;
+  const st = document.getElementById("items-status");
+  if (st) { st.textContent = "Filtered"; st.className = ""; }
+  renderItemsTable();
+}
+function resetItemsFilters() {
+  itemsFilters = { search: "", category: "", warehouse: "", month: "" };
+  document.getElementById("i-search").value = "";
+  document.getElementById("i-category").value = "";
+  document.getElementById("i-warehouse").value = "";
+  document.getElementById("i-month").value = "";
+  itemsPage = 1;
+  const st = document.getElementById("items-status");
+  if (st) { st.textContent = "Filters reset"; st.className = ""; }
+  renderItemsTable();
+}
+
 function showPage(page) {
   document.querySelectorAll("section.section").forEach(sec => {
     sec.style.display = (sec.dataset.page === page) ? "" : "none";
@@ -996,107 +1099,40 @@ document.addEventListener("DOMContentLoaded", () => {
   loadData();
   document.getElementById("refresh-btn").addEventListener("click", loadData);
 
-  document.getElementById("apply-filters").addEventListener("click", () => {
-    incidentFilters.from = document.getElementById("f-date-from").value;
-    incidentFilters.to = document.getElementById("f-date-to").value;
-    incidentFilters.device = document.getElementById("f-device").value.trim();
-    incidentFilters.type = document.getElementById("f-type").value;
-    incidentFilters.state = document.getElementById("f-state").value;
-    incidentFilters.location = document.getElementById("f-location").value.trim();
-    incidentFilters.month = document.getElementById("f-month").value;
-    incidentPage = 1;
-    const st = document.getElementById("filter-status");
-    st.textContent = "Filters applied";
-    st.className = "";
-    renderIncidentsTable();
-    renderDateIncidents();
-    renderDeviceDowntime();
-  });
-
-  document.getElementById("reset-filters").addEventListener("click", () => {
-    incidentFilters = { from: "", to: "", device: "", type: "", state: "", location: "", month: "" };
-    document.getElementById("f-date-from").value = "";
-    document.getElementById("f-date-to").value = "";
-    document.getElementById("f-device").value = "";
-    document.getElementById("f-type").value = "";
-    document.getElementById("f-state").value = "";
-    document.getElementById("f-location").value = "";
-    document.getElementById("f-month").value = "";
-    incidentPage = 1;
-    document.getElementById("filter-status").textContent = "Filters reset";
-    renderIncidentsTable();
-    renderDateIncidents();
-    renderDeviceDowntime();
-  });
+  document.getElementById("apply-filters").addEventListener("click", applyIncidentFilters);
+  document.getElementById("reset-filters").addEventListener("click", resetIncidentFilters);
 
   // Consumption filters
-  document.getElementById("apply-consumption").addEventListener("click", () => {
-    consumptionFilters.from = document.getElementById("c-date-from").value;
-    consumptionFilters.to = document.getElementById("c-date-to").value;
-    consumptionFilters.item = document.getElementById("c-item").value.trim();
-    consumptionFilters.warehouse = document.getElementById("c-warehouse").value.trim();
-    consumptionFilters.mill = document.getElementById("c-mill").value.trim();
-    consumptionFilters.month = document.getElementById("c-month").value;
-    consumptionPage = 1;
-    document.getElementById("consumption-status").textContent = "Filters applied";
-    renderConsumptionTable();
-  });
-  document.getElementById("reset-consumption").addEventListener("click", () => {
-    consumptionFilters = { from: "", to: "", item: "", warehouse: "", mill: "", month: "" };
-    document.getElementById("c-date-from").value = "";
-    document.getElementById("c-date-to").value = "";
-    document.getElementById("c-item").value = "";
-    document.getElementById("c-warehouse").value = "";
-    document.getElementById("c-mill").value = "";
-    document.getElementById("c-month").value = "";
-    consumptionPage = 1;
-    document.getElementById("consumption-status").textContent = "Filters reset";
-    renderConsumptionTable();
-  });
+  document.getElementById("apply-consumption").addEventListener("click", applyConsumptionFilters);
+  document.getElementById("reset-consumption").addEventListener("click", resetConsumptionFilters);
 
   // Assets filters
-  document.getElementById("apply-assets").addEventListener("click", () => {
-    assetsFilters.search = document.getElementById("a-search").value.trim();
-    assetsFilters.status = document.getElementById("a-status").value;
-    assetsFilters.category = document.getElementById("a-category").value;
-    assetsFilters.brand = document.getElementById("a-brand").value.trim();
-    assetsFilters.plant = document.getElementById("a-plant").value.trim();
-    assetsFilters.month = document.getElementById("a-month").value;
-    assetsPage = 1;
-    document.getElementById("assets-status").textContent = "Filters applied";
-    renderAssetsTable();
-  });
-  document.getElementById("reset-assets").addEventListener("click", () => {
-    assetsFilters = { search: "", status: "", category: "", brand: "", plant: "", month: "" };
-    document.getElementById("a-search").value = "";
-    document.getElementById("a-status").value = "";
-    document.getElementById("a-category").value = "";
-    document.getElementById("a-brand").value = "";
-    document.getElementById("a-plant").value = "";
-    document.getElementById("a-month").value = "";
-    assetsPage = 1;
-    document.getElementById("assets-status").textContent = "Filters reset";
-    renderAssetsTable();
-  });
+  document.getElementById("apply-assets").addEventListener("click", applyAssetsFilters);
+  document.getElementById("reset-assets").addEventListener("click", resetAssetsFilters);
 
   // Items filters
-  document.getElementById("apply-items").addEventListener("click", () => {
-    itemsFilters.search = document.getElementById("i-search").value.trim();
-    itemsFilters.category = document.getElementById("i-category").value;
-    itemsFilters.warehouse = document.getElementById("i-warehouse").value.trim();
-    itemsFilters.month = document.getElementById("i-month").value;
-    itemsPage = 1;
-    document.getElementById("items-status").textContent = "Filters applied";
-    renderItemsTable();
-  });
-  document.getElementById("reset-items").addEventListener("click", () => {
-    itemsFilters = { search: "", category: "", warehouse: "", month: "" };
-    document.getElementById("i-search").value = "";
-    document.getElementById("i-category").value = "";
-    document.getElementById("i-warehouse").value = "";
-    document.getElementById("i-month").value = "";
-    itemsPage = 1;
-    document.getElementById("items-status").textContent = "Filters reset";
-    renderItemsTable();
-  });
+  document.getElementById("apply-items").addEventListener("click", applyItemsFilters);
+  document.getElementById("reset-items").addEventListener("click", resetItemsFilters);
+
+  // Auto-filter: typing/selecting in any filter control re-applies filters without clicking Apply
+  const bindAuto = (ids, applyFn) => {
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const isText = (el.tagName === "INPUT" && el.type !== "date");
+      if (isText) {
+        let timer = null;
+        el.addEventListener("input", () => {
+          if (timer) clearTimeout(timer);
+          timer = setTimeout(applyFn, 250);
+        });
+      } else {
+        el.addEventListener("change", applyFn);
+      }
+    });
+  };
+  bindAuto(["f-date-from","f-date-to","f-device","f-type","f-state","f-location","f-month"], applyIncidentFilters);
+  bindAuto(["c-date-from","c-date-to","c-item","c-warehouse","c-mill","c-month"], applyConsumptionFilters);
+  bindAuto(["a-search","a-status","a-category","a-brand","a-plant","a-month"], applyAssetsFilters);
+  bindAuto(["i-search","i-category","i-warehouse","i-month"], applyItemsFilters);
 });

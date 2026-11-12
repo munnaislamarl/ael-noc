@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Factory Network Monitor - Dashboard</title>
+  <title>AEL-NOC Dashboard</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
@@ -11,8 +11,8 @@
   <div class="container">
     <header class="top">
       <div>
-        <h1>Factory Network Monitor</h1>
-        <div class="sub">Live operational dashboard &middot; <span id="generated-at">Generated: -</span></div>
+        <h1>AEL-NOC</h1>
+        <div class="sub">Network Operations Center &middot; Live Dashboard &middot; <span id="generated-at">Generated: -</span></div>
       </div>
       <div class="actions">
         <span id="load-status" class="loading">Loading…</span>
@@ -24,12 +24,12 @@
     <div class="layout">
       <aside class="sidebar">
         <div class="nav-title">Navigation</div>
-        <button class="nav-item active" data-page="overview">Overview</button>
-        <button class="nav-item" data-page="incidents">Incidents</button>
-        <button class="nav-item" data-page="consumption">Consumption</button>
-        <button class="nav-item" data-page="assets">Assets</button>
-        <button class="nav-item" data-page="items">Item List</button>
-        <button class="nav-item" data-page="charts">Charts</button>
+        <button class="nav-item active" data-page="overview"><span class="nav-icon">📊</span> Overview</button>
+        <button class="nav-item" data-page="incidents"><span class="nav-icon">⚠️</span> Incidents</button>
+        <button class="nav-item" data-page="consumption"><span class="nav-icon">💰</span> Consumption</button>
+        <button class="nav-item" data-page="assets"><span class="nav-icon">🖥️</span> Assets</button>
+        <button class="nav-item" data-page="items"><span class="nav-icon">📦</span> Item List</button>
+        <button class="nav-item" data-page="charts"><span class="nav-icon">📈</span> Charts</button>
       </aside>
 
       <main class="content">
@@ -277,7 +277,7 @@
     </div>
 
     <footer>
-      Data source: Google Sheets (Factory Network Monitor). Dashboard is static HTML hosted on GitHub Pages.
+      Data source: Google Sheets (AEL-NOC). Dashboard is static HTML hosted on GitHub Pages.
     </footer>
   </div>
   <script src="app.js"></script>

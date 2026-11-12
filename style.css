@@ -22,12 +22,13 @@ body {
 }
 .container { max-width: 1400px; margin: 0 auto; padding: 12px 16px; }
 .layout { display: flex; gap: 20px; align-items: flex-start; }
-.sidebar { width: 220px; flex: 0 0 220px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; box-shadow: var(--shadow); position: sticky; top: 16px; }
-.sidebar .nav-title { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 8px 10px; }
-.nav-item { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; border: none; background: transparent; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: .9rem; color: var(--text); margin-bottom: 4px; }
-.nav-item:hover { background: #eef2f7; }
-.nav-item.active { background: var(--primary); color: #fff; }
+.sidebar { width: 220px; flex: 0 0 220px; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); border: none; border-radius: 12px; padding: 14px 10px; box-shadow: 0 4px 12px rgba(15,23,42,.15); position: sticky; top: 16px; color: #e2e8f0; }
+.sidebar .nav-title { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; padding: 8px 12px 6px; font-weight: 600; }
+.nav-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: none; background: transparent; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: .9rem; color: #cbd5e1; margin-bottom: 4px; transition: all .15s ease; font-weight: 500; }
+.nav-item:hover { background: rgba(255,255,255,.08); color: #fff; }
+.nav-item.active { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,.4); }
 .nav-item.active:hover { background: #1d4ed8; }
+.nav-icon { font-size: 1.1rem; width: 22px; text-align: center; }
 .content { flex: 1; min-width: 0; }
 @media (max-width: 900px) {
   .layout { flex-direction: column; }
@@ -37,10 +38,10 @@ body {
 }
 header.top {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
-  gap: 12px; margin-bottom: 12px;
+  gap: 12px; margin-bottom: 14px; padding: 14px 18px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow);
 }
-header.top h1 { margin: 0; font-size: 1.6rem; }
-header.top .sub { color: var(--muted); font-size: .9rem; margin-top: 4px; }
+header.top h1 { margin: 0; font-size: 1.5rem; color: var(--primary); font-weight: 700; }
+header.top .sub { color: var(--muted); font-size: .85rem; margin-top: 2px; }
 header.top .actions { display: flex; gap: 8px; }
 button {
   border: 1px solid var(--border); background: var(--card); color: var(--text);
@@ -58,10 +59,16 @@ button.primary:hover { background: #1d4ed8; }
   background: var(--card); border: 1px solid var(--border); border-radius: 10px;
   padding: 12px; box-shadow: var(--shadow);
 }
-.kpi { display: flex; flex-direction: column; gap: 6px; }
+.kpi { display: flex; flex-direction: column; gap: 4px; border-left: 3px solid var(--border); padding-left: 10px; }
 .kpi .label { color: var(--muted); font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; }
 .kpi .value { font-size: 1.5rem; font-weight: 700; line-height: 1; }
 .kpi .hint { color: var(--muted); font-size: .8rem; }
+.kpi.accent-primary { border-left-color: var(--primary); }
+.kpi.accent-success { border-left-color: var(--success); }
+.kpi.accent-danger { border-left-color: var(--danger); }
+.kpi.accent-warning { border-left-color: var(--warning); }
+.kpi.accent-purple { border-left-color: var(--purple); }
+.kpi.accent-teal { border-left-color: var(--teal); }
 .kpi.accent-primary .value { color: var(--primary); }
 .kpi.accent-success .value { color: var(--success); }
 .kpi.accent-danger .value { color: var(--danger); }
@@ -74,7 +81,7 @@ button.primary:hover { background: #1d4ed8; }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: .8rem; }
 th, td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
-th { background: #f8fafc; color: var(--muted); font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+th { background: #eef2f7; color: var(--text); font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; }
 tr:hover td { background: #f8fafc; }
 .badge {
   display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .75rem; font-weight: 600;
