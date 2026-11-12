@@ -21,242 +21,256 @@
       </div>
     </header>
 
-    <section class="section">
-      <h2>Devices</h2>
-      <div class="grid kpi-grid">
-        <div class="card kpi accent-primary"><span class="label">Total Devices</span><span class="value" id="kpi-devices-total">-</span></div>
-        <div class="card kpi accent-success"><span class="label">Up</span><span class="value" id="kpi-devices-up">-</span><span class="hint"><span class="dot up"></span> online</span></div>
-        <div class="card kpi accent-danger"><span class="label">Down</span><span class="value" id="kpi-devices-down">-</span><span class="hint"><span class="dot down"></span> offline</span></div>
-        <div class="card kpi accent-warning"><span class="label">Unknown / Not Checked</span><span class="value" id="kpi-devices-unknown">-</span></div>
-      </div>
-    </section>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="nav-title">Navigation</div>
+        <button class="nav-item active" data-page="overview">Overview</button>
+        <button class="nav-item" data-page="incidents">Incidents</button>
+        <button class="nav-item" data-page="consumption">Consumption</button>
+        <button class="nav-item" data-page="assets">Assets</button>
+        <button class="nav-item" data-page="items">Item List</button>
+        <button class="nav-item" data-page="charts">Charts</button>
+      </aside>
 
-    <section class="section">
-      <h2>Downtime (Running Month)</h2>
-      <div class="grid kpi-grid">
-        <div class="card kpi accent-primary"><span class="label">Period</span><span class="value" style="font-size:1.1rem" id="dm-period">-</span></div>
-        <div class="card kpi accent-danger"><span class="label">Incidents</span><span class="value" id="kpi-dm-incidents">-</span></div>
-        <div class="card kpi accent-warning"><span class="label">Devices Affected</span><span class="value" id="kpi-dm-devices">-</span></div>
-        <div class="card kpi accent-purple"><span class="label">Total Downtime (hrs)</span><span class="value" id="kpi-dm-hours">-</span></div>
-        <div class="card kpi accent-teal"><span class="label">Total Downtime (min)</span><span class="value" id="kpi-dm-minutes">-</span></div>
-      </div>
-    </section>
+      <main class="content">
+        <section class="section" data-page="overview">
+          <h2>Devices</h2>
+          <div class="grid kpi-grid">
+            <div class="card kpi accent-primary"><span class="label">Total Devices</span><span class="value" id="kpi-devices-total">-</span></div>
+            <div class="card kpi accent-success"><span class="label">Up</span><span class="value" id="kpi-devices-up">-</span><span class="hint"><span class="dot up"></span> online</span></div>
+            <div class="card kpi accent-danger"><span class="label">Down</span><span class="value" id="kpi-devices-down">-</span><span class="hint"><span class="dot down"></span> offline</span></div>
+            <div class="card kpi accent-warning"><span class="label">Unknown / Not Checked</span><span class="value" id="kpi-devices-unknown">-</span></div>
+          </div>
+        </section>
 
-    <section class="section">
-      <h2>Downtime (All History)</h2>
-      <div class="grid kpi-grid">
-        <div class="card kpi accent-danger"><span class="label">Incidents</span><span class="value" id="kpi-da-incidents">-</span></div>
-        <div class="card kpi accent-purple"><span class="label">Total Downtime (hrs)</span><span class="value" id="kpi-da-hours">-</span></div>
-        <div class="card kpi accent-teal"><span class="label">Total Downtime (min)</span><span class="value" id="kpi-da-minutes">-</span></div>
-      </div>
-    </section>
+        <section class="section" data-page="overview">
+          <h2>Downtime (Running Month)</h2>
+          <div class="grid kpi-grid">
+            <div class="card kpi accent-primary"><span class="label">Period</span><span class="value" style="font-size:1.1rem" id="dm-period">-</span></div>
+            <div class="card kpi accent-danger"><span class="label">Incidents</span><span class="value" id="kpi-dm-incidents">-</span></div>
+            <div class="card kpi accent-warning"><span class="label">Devices Affected</span><span class="value" id="kpi-dm-devices">-</span></div>
+            <div class="card kpi accent-purple"><span class="label">Total Downtime (hrs)</span><span class="value" id="kpi-dm-hours">-</span></div>
+            <div class="card kpi accent-teal"><span class="label">Total Downtime (min)</span><span class="value" id="kpi-dm-minutes">-</span></div>
+          </div>
+        </section>
 
-    <section class="section">
-      <h2>Filters</h2>
-      <div class="card">
-        <div class="filter-grid">
-          <label>Date from <input type="date" id="f-date-from"></label>
-          <label>Date to <input type="date" id="f-date-to"></label>
-          <label>Device <input type="text" id="f-device" placeholder="Device name"></label>
-          <label>Type <select id="f-type"><option value="">All</option></select></label>
-          <label>State <select id="f-state"><option value="">All</option><option value="closed">closed</option><option value="ongoing">ongoing</option></select></label>
-          <label>Location <input type="text" id="f-location" placeholder="Location"></label>
-        </div>
-        <div class="filter-actions">
-          <button id="apply-filters" class="primary">Apply</button>
-          <button id="reset-filters">Reset</button>
-          <span id="filter-status" class="loading"></span>
-        </div>
-      </div>
-    </section>
+        <section class="section" data-page="overview">
+          <h2>Downtime (All History)</h2>
+          <div class="grid kpi-grid">
+            <div class="card kpi accent-danger"><span class="label">Incidents</span><span class="value" id="kpi-da-incidents">-</span></div>
+            <div class="card kpi accent-purple"><span class="label">Total Downtime (hrs)</span><span class="value" id="kpi-da-hours">-</span></div>
+            <div class="card kpi accent-teal"><span class="label">Total Downtime (min)</span><span class="value" id="kpi-da-minutes">-</span></div>
+          </div>
+        </section>
 
-    <section class="section">
-      <h2>Downtime Incidents (filtered)</h2>
-      <div class="grid kpi-grid" id="incident-kpis">
-        <div class="card kpi accent-danger"><span class="label">Incidents</span><span class="value" id="kpi-f-incidents">-</span></div>
-        <div class="card kpi accent-warning"><span class="label">Devices Affected</span><span class="value" id="kpi-f-devices">-</span></div>
-        <div class="card kpi accent-teal"><span class="label">Total Downtime (min)</span><span class="value" id="kpi-f-minutes">-</span></div>
-        <div class="card kpi accent-purple"><span class="label">Ongoing</span><span class="value" id="kpi-f-ongoing">-</span></div>
-      </div>
-      <div class="card">
-        <div class="table-wrap">
-          <table id="incidents-table">
-            <thead><tr>
-              <th>Device</th><th>IP address</th><th>Type</th><th>Location</th><th>Down from</th><th>Back up at</th><th>Duration</th><th>State</th>
-            </tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="pagination" id="incidents-pagination"></div>
-      </div>
-    </section>
+        <section class="section" data-page="overview">
+          <h2>IT Assets &amp; Inventory</h2>
+          <div class="grid kpi-grid">
+            <div class="card kpi accent-primary"><span class="label">Total Assets</span><span class="value" id="kpi-assets-total">-</span></div>
+            <div class="card kpi accent-success"><span class="label">Available</span><span class="value" id="kpi-assets-avail">-</span></div>
+            <div class="card kpi accent-primary"><span class="label">Total Items</span><span class="value" id="kpi-items-total">-</span></div>
+            <div class="card kpi accent-teal"><span class="label">Sum of Rates (BDT)</span><span class="value" style="font-size:1.4rem" id="kpi-items-sum">-</span></div>
+            <div class="card kpi accent-warning"><span class="label">IT Maintenance Records</span><span class="value" id="kpi-maint">-</span></div>
+            <div class="card kpi accent-danger"><span class="label">IT Consumption Records</span><span class="value" id="kpi-cons-records">-</span></div>
+            <div class="card kpi accent-purple"><span class="label">Consumption Cost (BDT)</span><span class="value" style="font-size:1.4rem" id="kpi-cons-cost">-</span></div>
+          </div>
+        </section>
 
-    <section class="section">
-      <h2>Date-wise Incidents</h2>
-      <div class="card chart-card"><canvas id="chart-date-incidents"></canvas></div>
-      <div class="card">
-        <div class="table-wrap">
-          <table id="date-incidents-table">
-            <thead><tr>
-              <th>Date</th><th>Incidents</th><th>Devices Affected</th><th>Total Downtime</th><th>Total Downtime (min)</th>
-            </tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+        <section class="section" data-page="overview">
+          <h2>Users &amp; Access</h2>
+          <div class="grid kpi-grid">
+            <div class="card kpi accent-primary"><span class="label">Total Users</span><span class="value" id="kpi-users">-</span></div>
+            <div class="card kpi accent-primary"><span class="label">Access Requests (Total)</span><span class="value" id="kpi-ar-total">-</span></div>
+            <div class="card kpi accent-warning"><span class="label">Pending</span><span class="value" id="kpi-ar-pending">-</span></div>
+            <div class="card kpi accent-success"><span class="label">Approved</span><span class="value" id="kpi-ar-approved">-</span></div>
+            <div class="card kpi accent-danger"><span class="label">Rejected</span><span class="value" id="kpi-ar-rejected">-</span></div>
+            <div class="card kpi accent-teal"><span class="label">Activity Events (stored)</span><span class="value" id="kpi-activity">-</span></div>
+          </div>
+        </section>
 
-    <section class="section">
-      <h2>Device-wise Downtime</h2>
-      <div class="card">
-        <div class="table-wrap">
-          <table id="device-downtime-table">
-            <thead><tr>
-              <th>Device</th><th>IP address</th><th>Type</th><th>Location</th><th>Down (times)</th><th>Total downtime</th><th>Downtime (min)</th><th>Longest outage</th><th>First down</th><th>Last down</th><th>Now</th>
-            </tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+        <section class="section" data-page="incidents">
+          <h2>Filters</h2>
+          <div class="card">
+            <div class="filter-grid">
+              <label>Date from <input type="date" id="f-date-from"></label>
+              <label>Date to <input type="date" id="f-date-to"></label>
+              <label>Device <input type="text" id="f-device" placeholder="Device name"></label>
+              <label>Type <select id="f-type"><option value="">All</option></select></label>
+              <label>State <select id="f-state"><option value="">All</option><option value="closed">closed</option><option value="ongoing">ongoing</option></select></label>
+              <label>Location <input type="text" id="f-location" placeholder="Location"></label>
+            </div>
+            <div class="filter-actions">
+              <button id="apply-filters" class="primary">Apply</button>
+              <button id="reset-filters">Reset</button>
+              <span id="filter-status" class="loading"></span>
+            </div>
+          </div>
+        </section>
 
-    <section class="section">
-      <h2>IT Consumption Report</h2>
-      <div class="card">
-        <div class="filter-grid">
-          <label>Date from <input type="date" id="c-date-from"></label>
-          <label>Date to <input type="date" id="c-date-to"></label>
-          <label>Item <input type="text" id="c-item" placeholder="Item name/code"></label>
-          <label>Warehouse <input type="text" id="c-warehouse" placeholder="Warehouse"></label>
-          <label>Mill <input type="text" id="c-mill" placeholder="Mill"></label>
-        </div>
-        <div class="filter-actions">
-          <button id="apply-consumption" class="primary">Apply</button>
-          <button id="reset-consumption">Reset</button>
-          <span id="consumption-status" class="loading"></span>
-        </div>
-      </div>
-      <div class="grid kpi-grid" id="consumption-kpis">
-        <div class="card kpi accent-danger"><span class="label">Records</span><span class="value" id="kpi-c-records">-</span></div>
-        <div class="card kpi accent-purple"><span class="label">Total Cost (BDT)</span><span class="value" id="kpi-c-cost">-</span></div>
-        <div class="card kpi accent-teal"><span class="label">Issued Amount</span><span class="value" id="kpi-c-issued">-</span></div>
-        <div class="card kpi accent-primary"><span class="label">Unique Items</span><span class="value" id="kpi-c-items">-</span></div>
-      </div>
-      <div class="card chart-card"><canvas id="chart-monthly-cost"></canvas></div>
-      <div class="card">
-        <div class="table-wrap">
-          <table id="consumption-table">
-            <thead><tr>
-              <th>No</th><th>Date</th><th>IR No.</th><th>Item Code</th><th>Item Name</th><th>Warehouse</th><th>Mill</th><th>Usage Area</th><th>Issued</th><th>UoM</th><th>Rate</th><th>Total Cost</th><th>Profit Center</th>
-            </tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="pagination" id="consumption-pagination"></div>
-      </div>
-    </section>
+        <section class="section" data-page="incidents">
+          <h2>Downtime Incidents (filtered)</h2>
+          <div class="grid kpi-grid" id="incident-kpis">
+            <div class="card kpi accent-danger"><span class="label">Incidents</span><span class="value" id="kpi-f-incidents">-</span></div>
+            <div class="card kpi accent-warning"><span class="label">Devices Affected</span><span class="value" id="kpi-f-devices">-</span></div>
+            <div class="card kpi accent-teal"><span class="label">Total Downtime (min)</span><span class="value" id="kpi-f-minutes">-</span></div>
+            <div class="card kpi accent-purple"><span class="label">Ongoing</span><span class="value" id="kpi-f-ongoing">-</span></div>
+          </div>
+          <div class="card">
+            <div class="table-wrap">
+              <table id="incidents-table">
+                <thead><tr>
+                  <th>Device</th><th>IP address</th><th>Type</th><th>Location</th><th>Down from</th><th>Back up at</th><th>Duration</th><th>State</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="incidents-pagination"></div>
+          </div>
+        </section>
 
-    <section class="section">
-      <h2>IT Assets (Details)</h2>
-      <div class="card">
-        <div class="filter-grid">
-          <label>Search <input type="text" id="a-search" placeholder="Tag/Name/Serial/IP"></label>
-          <label>Status <select id="a-status"><option value="">All</option></select></label>
-          <label>Category <select id="a-category"><option value="">All</option></select></label>
-          <label>Brand <input type="text" id="a-brand" placeholder="Brand"></label>
-          <label>Plant/Warehouse <input type="text" id="a-plant" placeholder="Plant"></label>
-        </div>
-        <div class="filter-actions">
-          <button id="apply-assets" class="primary">Apply</button>
-          <button id="reset-assets">Reset</button>
-          <span id="assets-status" class="loading"></span>
-        </div>
-      </div>
-      <div class="grid kpi-grid" id="assets-kpis">
-        <div class="card kpi accent-primary"><span class="label">Total Assets</span><span class="value" id="kpi-a-total">-</span></div>
-        <div class="card kpi accent-success"><span class="label">Assigned</span><span class="value" id="kpi-a-assigned">-</span></div>
-        <div class="card kpi accent-warning"><span class="label">Available</span><span class="value" id="kpi-a-available">-</span></div>
-        <div class="card kpi accent-danger"><span class="label">Under Maintenance</span><span class="value" id="kpi-a-maint">-</span></div>
-      </div>
-      <div class="card">
-        <div class="table-wrap">
-          <table id="assets-table">
-            <thead><tr>
-              <th>No</th><th>Asset Tag</th><th>Asset Item Name</th><th>Category</th><th>Device Type</th><th>Brand</th><th>Model</th><th>Serial</th><th>IP Address</th><th>Location</th><th>Plant</th><th>Warehouse</th><th>Assigned To</th><th>Department</th><th>Warranty End</th><th>Status</th>
-            </tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="pagination" id="assets-pagination"></div>
-      </div>
-    </section>
+        <section class="section" data-page="incidents">
+          <h2>Date-wise Incidents</h2>
+          <div class="card chart-card"><canvas id="chart-date-incidents"></canvas></div>
+          <div class="card">
+            <div class="table-wrap">
+              <table id="date-incidents-table">
+                <thead><tr>
+                  <th>Date</th><th>Incidents</th><th>Devices Affected</th><th>Total Downtime</th><th>Total Downtime (min)</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
 
-    <section class="section">
-      <h2>Item List</h2>
-      <div class="card">
-        <div class="filter-grid">
-          <label>Search <input type="text" id="i-search" placeholder="Code/Item/Category"></label>
-          <label>Category <select id="i-category"><option value="">All</option></select></label>
-          <label>Warehouse <input type="text" id="i-warehouse" placeholder="Warehouse"></label>
-        </div>
-        <div class="filter-actions">
-          <button id="apply-items" class="primary">Apply</button>
-          <button id="reset-items">Reset</button>
-          <span id="items-status" class="loading"></span>
-        </div>
-      </div>
-      <div class="grid kpi-grid" id="items-kpis">
-        <div class="card kpi accent-primary"><span class="label">Total Items</span><span class="value" id="kpi-i-total">-</span></div>
-        <div class="card kpi accent-teal"><span class="label">Sum of Rates (BDT)</span><span class="value" id="kpi-i-sum">-</span></div>
-        <div class="card kpi accent-success"><span class="label">Unique Categories</span><span class="value" id="kpi-i-cats">-</span></div>
-      </div>
-      <div class="card">
-        <div class="table-wrap">
-          <table id="items-table">
-            <thead><tr>
-              <th>No</th><th>Code</th><th>Item</th><th>Item Type</th><th>Category</th><th>Sub-Category</th><th>UoM</th><th>Rate (BDT)</th><th>Warehouse</th><th>Remark</th>
-            </tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="pagination" id="items-pagination"></div>
-      </div>
-    </section>
+        <section class="section" data-page="incidents">
+          <h2>Device-wise Downtime</h2>
+          <div class="card">
+            <div class="table-wrap">
+              <table id="device-downtime-table">
+                <thead><tr>
+                  <th>Device</th><th>IP address</th><th>Type</th><th>Location</th><th>Down (times)</th><th>Total downtime</th><th>Downtime (min)</th><th>Longest outage</th><th>First down</th><th>Last down</th><th>Now</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
 
-    <section class="section">
-      <h2>Charts</h2>
-      <div class="grid charts">
-        <div class="card chart-card"><canvas id="chart-devices"></canvas></div>
-        <div class="card chart-card"><canvas id="chart-access"></canvas></div>
-        <div class="card chart-card"><canvas id="chart-downtime"></canvas></div>
-        <div class="card chart-card"><canvas id="chart-it"></canvas></div>
-      </div>
-    </section>
+        <section class="section" data-page="consumption">
+          <h2>IT Consumption Report</h2>
+          <div class="card">
+            <div class="filter-grid">
+              <label>Date from <input type="date" id="c-date-from"></label>
+              <label>Date to <input type="date" id="c-date-to"></label>
+              <label>Item <input type="text" id="c-item" placeholder="Item name/code"></label>
+              <label>Warehouse <input type="text" id="c-warehouse" placeholder="Warehouse"></label>
+              <label>Mill <input type="text" id="c-mill" placeholder="Mill"></label>
+            </div>
+            <div class="filter-actions">
+              <button id="apply-consumption" class="primary">Apply</button>
+              <button id="reset-consumption">Reset</button>
+              <span id="consumption-status" class="loading"></span>
+            </div>
+          </div>
+          <div class="grid kpi-grid" id="consumption-kpis">
+            <div class="card kpi accent-danger"><span class="label">Records</span><span class="value" id="kpi-c-records">-</span></div>
+            <div class="card kpi accent-purple"><span class="label">Total Cost (BDT)</span><span class="value" id="kpi-c-cost">-</span></div>
+            <div class="card kpi accent-teal"><span class="label">Issued Amount</span><span class="value" id="kpi-c-issued">-</span></div>
+            <div class="card kpi accent-primary"><span class="label">Unique Items</span><span class="value" id="kpi-c-items">-</span></div>
+          </div>
+          <div class="card chart-card"><canvas id="chart-monthly-cost"></canvas></div>
+          <div class="card">
+            <div class="table-wrap">
+              <table id="consumption-table">
+                <thead><tr>
+                  <th>No</th><th>Date</th><th>IR No.</th><th>Item Code</th><th>Item Name</th><th>Warehouse</th><th>Mill</th><th>Usage Area</th><th>Issued</th><th>UoM</th><th>Rate</th><th>Total Cost</th><th>Profit Center</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="consumption-pagination"></div>
+          </div>
+        </section>
 
-    <section class="section">
-      <h2>IT Assets &amp; Inventory</h2>
-      <div class="grid kpi-grid">
-        <div class="card kpi accent-primary"><span class="label">Total Assets</span><span class="value" id="kpi-assets-total">-</span></div>
-        <div class="card kpi accent-success"><span class="label">Available</span><span class="value" id="kpi-assets-avail">-</span></div>
-        <div class="card kpi accent-primary"><span class="label">Total Items</span><span class="value" id="kpi-items-total">-</span></div>
-        <div class="card kpi accent-teal"><span class="label">Sum of Rates (BDT)</span><span class="value" style="font-size:1.4rem" id="kpi-items-sum">-</span></div>
-        <div class="card kpi accent-warning"><span class="label">IT Maintenance Records</span><span class="value" id="kpi-maint">-</span></div>
-        <div class="card kpi accent-danger"><span class="label">IT Consumption Records</span><span class="value" id="kpi-cons-records">-</span></div>
-        <div class="card kpi accent-purple"><span class="label">Consumption Cost (BDT)</span><span class="value" style="font-size:1.4rem" id="kpi-cons-cost">-</span></div>
-      </div>
-    </section>
+        <section class="section" data-page="assets">
+          <h2>IT Assets (Details)</h2>
+          <div class="card">
+            <div class="filter-grid">
+              <label>Search <input type="text" id="a-search" placeholder="Tag/Name/Serial/IP"></label>
+              <label>Status <select id="a-status"><option value="">All</option></select></label>
+              <label>Category <select id="a-category"><option value="">All</option></select></label>
+              <label>Brand <input type="text" id="a-brand" placeholder="Brand"></label>
+              <label>Plant/Warehouse <input type="text" id="a-plant" placeholder="Plant"></label>
+            </div>
+            <div class="filter-actions">
+              <button id="apply-assets" class="primary">Apply</button>
+              <button id="reset-assets">Reset</button>
+              <span id="assets-status" class="loading"></span>
+            </div>
+          </div>
+          <div class="grid kpi-grid" id="assets-kpis">
+            <div class="card kpi accent-primary"><span class="label">Total Assets</span><span class="value" id="kpi-a-total">-</span></div>
+            <div class="card kpi accent-success"><span class="label">Assigned</span><span class="value" id="kpi-a-assigned">-</span></div>
+            <div class="card kpi accent-warning"><span class="label">Available</span><span class="value" id="kpi-a-available">-</span></div>
+            <div class="card kpi accent-danger"><span class="label">Under Maintenance</span><span class="value" id="kpi-a-maint">-</span></div>
+          </div>
+          <div class="card">
+            <div class="table-wrap">
+              <table id="assets-table">
+                <thead><tr>
+                  <th>No</th><th>Asset Tag</th><th>Asset Item Name</th><th>Category</th><th>Device Type</th><th>Brand</th><th>Model</th><th>Serial</th><th>IP Address</th><th>Location</th><th>Plant</th><th>Warehouse</th><th>Assigned To</th><th>Department</th><th>Warranty End</th><th>Status</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="assets-pagination"></div>
+          </div>
+        </section>
 
-    <section class="section">
-      <h2>Users &amp; Access</h2>
-      <div class="grid kpi-grid">
-        <div class="card kpi accent-primary"><span class="label">Total Users</span><span class="value" id="kpi-users">-</span></div>
-        <div class="card kpi accent-primary"><span class="label">Access Requests (Total)</span><span class="value" id="kpi-ar-total">-</span></div>
-        <div class="card kpi accent-warning"><span class="label">Pending</span><span class="value" id="kpi-ar-pending">-</span></div>
-        <div class="card kpi accent-success"><span class="label">Approved</span><span class="value" id="kpi-ar-approved">-</span></div>
-        <div class="card kpi accent-danger"><span class="label">Rejected</span><span class="value" id="kpi-ar-rejected">-</span></div>
-        <div class="card kpi accent-teal"><span class="label">Activity Events (stored)</span><span class="value" id="kpi-activity">-</span></div>
-      </div>
-    </section>
+        <section class="section" data-page="items">
+          <h2>Item List</h2>
+          <div class="card">
+            <div class="filter-grid">
+              <label>Search <input type="text" id="i-search" placeholder="Code/Item/Category"></label>
+              <label>Category <select id="i-category"><option value="">All</option></select></label>
+              <label>Warehouse <input type="text" id="i-warehouse" placeholder="Warehouse"></label>
+            </div>
+            <div class="filter-actions">
+              <button id="apply-items" class="primary">Apply</button>
+              <button id="reset-items">Reset</button>
+              <span id="items-status" class="loading"></span>
+            </div>
+          </div>
+          <div class="grid kpi-grid" id="items-kpis">
+            <div class="card kpi accent-primary"><span class="label">Total Items</span><span class="value" id="kpi-i-total">-</span></div>
+            <div class="card kpi accent-teal"><span class="label">Sum of Rates (BDT)</span><span class="value" id="kpi-i-sum">-</span></div>
+            <div class="card kpi accent-success"><span class="label">Unique Categories</span><span class="value" id="kpi-i-cats">-</span></div>
+          </div>
+          <div class="card">
+            <div class="table-wrap">
+              <table id="items-table">
+                <thead><tr>
+                  <th>No</th><th>Code</th><th>Item</th><th>Item Type</th><th>Category</th><th>Sub-Category</th><th>UoM</th><th>Rate (BDT)</th><th>Warehouse</th><th>Remark</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="items-pagination"></div>
+          </div>
+        </section>
+
+        <section class="section" data-page="charts">
+          <h2>Charts</h2>
+          <div class="grid charts">
+            <div class="card chart-card"><canvas id="chart-devices"></canvas></div>
+            <div class="card chart-card"><canvas id="chart-access"></canvas></div>
+            <div class="card chart-card"><canvas id="chart-downtime"></canvas></div>
+            <div class="card chart-card"><canvas id="chart-it"></canvas></div>
+          </div>
+        </section>
+      </main>
+    </div>
 
     <footer>
       Data source: Google Sheets (Factory Network Monitor). Dashboard is static HTML hosted on GitHub Pages.

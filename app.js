@@ -935,7 +935,22 @@ async function loadData() {
   }
 }
 
+function showPage(page) {
+  document.querySelectorAll("section.section").forEach(sec => {
+    sec.style.display = (sec.dataset.page === page) ? "" : "none";
+  });
+  document.querySelectorAll(".nav-item").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.page === page);
+  });
+  try { localStorage.setItem("activePage", page); } catch (e) {}
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  const saved = (function(){ try { return localStorage.getItem("activePage"); } catch(e){ return null; } })();
+  showPage(saved || "overview");
+  document.querySelectorAll(".nav-item").forEach(btn => {
+    btn.addEventListener("click", () => showPage(btn.dataset.page));
+  });
   loadData();
   document.getElementById("refresh-btn").addEventListener("click", loadData);
 
