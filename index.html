@@ -116,11 +116,6 @@
           <h2>Device List</h2>
           <p style="color:var(--muted);font-size:.9rem;margin:0 0 10px;">All monitored network devices with live status.</p>
           <div class="card">
-            <div class="filter-actions" style="margin-bottom:8px;">
-              <button id="dev-refresh" class="primary">Refresh</button>
-              <button id="dev-import">Import</button>
-              <button id="dev-add">Add Device</button>
-            </div>
             <div class="filter-grid">
               <label>Type <select id="dev-type"><option value="">All types (0)</option></select></label>
               <label>Status <select id="dev-status"><option value="">All</option><option>UP</option><option>DOWN</option></select></label>
@@ -136,10 +131,11 @@
             <div class="table-wrap">
               <table id="devices-table">
                 <thead><tr>
-                  <th>No</th><th>Name</th><th>IP address</th><th>Type</th><th>Location</th><th>Status</th><th>Response (ms)</th><th>Uptime 24h (%)</th><th>Last checked</th>
+                  <th>No</th><th>Name</th><th>IP address</th><th>Type</th><th>Location</th><th>Status</th><th>Response (ms)</th><th>Uptime 24h (%)</th><th>Uptime (Current Month %)</th><th>Last checked</th>
                 </tr></thead>
                 <tbody></tbody>
               </table>
+            </div>
             </div>
           </div>
         </section>
@@ -172,7 +168,7 @@
             <div class="table-wrap">
               <table id="assets-table">
                 <thead><tr>
-                  <th>No</th><th>Asset Tag</th><th>Asset Item Name</th><th>Category</th><th>Device Type</th><th>Brand</th><th>Model</th><th>Serial</th><th>IP Address</th><th>Location</th><th>Plant</th><th>Warehouse</th><th>Assigned To</th><th>Department</th><th>Warranty End</th><th>Status</th>
+                  <th>No</th><th>Asset Tag</th><th>Asset Item Name</th><th>Category</th><th>Device Type</th><th>Brand</th><th>Model</th><th>Serial</th><th>IP Address</th><th>Location</th><th>Plant</th><th>Warehouse</th><th Assigned To</th><th>Department</th><th>Warranty End</th><th>Status</th>
                 </tr></thead>
                 <tbody></tbody>
               </table>
@@ -202,6 +198,7 @@
             <div class="card kpi accent-teal"><span class="label">Sum of Rates (BDT)</span><span class="value" id="kpi-i-sum">-</span></div>
             <div class="card kpi accent-success"><span class="label">Unique Categories</span><span class="value" id="kpi-i-cats">-</span></div>
           </div>
+          <div class="card chart-card"><canvas id="chart-items"></canvas></div>
           <div class="card">
             <div class="table-wrap">
               <table id="items-table">
