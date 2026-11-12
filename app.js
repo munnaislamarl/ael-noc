@@ -126,8 +126,17 @@ let charts = {};
 let INCIDENTS = [];
 let DATE_INCIDENTS = [];
 let DEVICE_DOWNTIME = [];
+let CONSUMPTION = [];
+let ASSETS = [];
+let ITEMS = [];
 let incidentFilters = { from: "", to: "", device: "", type: "", state: "", location: "" };
 let incidentPage = 1;
+let consumptionFilters = { from: "", to: "", item: "", warehouse: "", mill: "" };
+let consumptionPage = 1;
+let assetsFilters = { search: "", status: "", category: "", brand: "", plant: "" };
+let assetsPage = 1;
+let itemsFilters = { search: "", category: "", warehouse: "" };
+let itemsPage = 1;
 const PAGE_SIZE = 50;
 
 function fmt(n) {
@@ -253,6 +262,9 @@ function renderAll(d) {
   renderIncidentsTable();
   renderDateIncidents();
   renderDeviceDowntime();
+  renderConsumptionTable();
+  renderAssetsTable();
+  renderItemsTable();
   const badge = document.getElementById("status-badge");
   badge.textContent = "Live data";
   badge.className = "badge ok";
@@ -331,6 +343,100 @@ function parseDeviceDowntime(rows) {
       firstDown: (r[11] || "").trim(),
       lastDown: (r[12] || "").trim(),
       now: (r[13] || "").trim()
+    });
+  }
+  return out;
+}
+
+function parseConsumption(rows) {
+  const out = [];
+  if (!rows || rows.length < 2) return out;
+  let start = 0;
+  if (rows[0] && /no|date/i.test(rows[0][0] + rows[0][1])) start = 1;
+  for (let i = start; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.length === 0) continue;
+    const no = (r[0] || "").trim();
+    const date = (r[1] || "").trim();
+    if (!date && !no) continue;
+    out.push({
+      no, date,
+      irNo: (r[2] || "").trim(),
+      itemCode: (r[3] || "").trim(),
+      itemName: (r[4] || "").trim(),
+      warehouse: (r[5] || "").trim(),
+      mill: (r[6] || "").trim(),
+      usageArea: (r[7] || "").trim(),
+      issued: numOr(r[8], 0),
+      uom: (r[9] || "").trim(),
+      rate: numOr(r[10], 0),
+      totalCost: numOr(r[11], 0),
+      profitCenter: (r[12] || "").trim(),
+      remarks: (r[13] || "").trim()
+    });
+  }
+  return out;
+}
+
+function parseAssets(rows) {
+  const out = [];
+  if (!rows || rows.length < 2) return out;
+  let start = 0;
+  if (rows[0] && /no|asset/i.test(rows[0][0] + rows[0][1])) start = 1;
+  for (let i = start; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.length === 0) continue;
+    const assetTag = (r[1] || "").trim();
+    const assetName = (r[2] || "").trim();
+    if (!assetTag && !assetName) continue;
+    out.push({
+      no: (r[0] || "").trim(),
+      assetTag,
+      assetName,
+      description: (r[3] || "").trim(),
+      category: (r[4] || "").trim(),
+      deviceType: (r[5] || "").trim(),
+      brand: (r[6] || "").trim(),
+      model: (r[7] || "").trim(),
+      serial: (r[8] || "").trim(),
+      ip: (r[9] || "").trim(),
+      mac: (r[10] || "").trim(),
+      location: (r[11] || "").trim(),
+      markingLocation: (r[12] || "").trim(),
+      plant: (r[13] || "").trim(),
+      warehouse: (r[14] || "").trim(),
+      assignedTo: (r[15] || "").trim(),
+      department: (r[16] || "").trim(),
+      warrantyEnd: (r[17] || "").trim(),
+      status: (r[18] || "").trim(),
+      remarks: (r[19] || "").trim()
+    });
+  }
+  return out;
+}
+
+function parseItems(rows) {
+  const out = [];
+  if (!rows || rows.length < 2) return out;
+  let start = 0;
+  if (rows[0] && /no|code/i.test(rows[0][0] + rows[0][1])) start = 1;
+  for (let i = start; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.length === 0) continue;
+    const code = (r[1] || "").trim();
+    const item = (r[2] || "").trim();
+    if (!code && !item) continue;
+    out.push({
+      no: (r[0] || "").trim(),
+      code,
+      item,
+      itemType: (r[3] || "").trim(),
+      category: (r[4] || "").trim(),
+      subCategory: (r[5] || "").trim(),
+      uom: (r[6] || "").trim(),
+      rate: numOr(r[7], 0),
+      warehouse: (r[8] || "").trim(),
+      remark: (r[9] || "").trim()
     });
   }
   return out;
@@ -517,6 +623,229 @@ function renderDeviceDowntime() {
   }
 }
 
+function getFilteredConsumption() {
+  return CONSUMPTION.filter(c => {
+    if (consumptionFilters.from && c.date < consumptionFilters.from) return false;
+    if (consumptionFilters.to && c.date > consumptionFilters.to) return false;
+    if (consumptionFilters.item) {
+      const q = consumptionFilters.item.toLowerCase();
+      if (!c.itemName.toLowerCase().includes(q) && !c.itemCode.toLowerCase().includes(q)) return false;
+    }
+    if (consumptionFilters.warehouse) {
+      if (!c.warehouse.toLowerCase().includes(consumptionFilters.warehouse.toLowerCase())) return false;
+    }
+    if (consumptionFilters.mill) {
+      if (!c.mill.toLowerCase().includes(consumptionFilters.mill.toLowerCase())) return false;
+    }
+    return true;
+  });
+}
+
+function renderConsumptionKPIs(list) {
+  const items = new Set(list.map(x => x.itemCode || x.itemName));
+  const cost = list.reduce((a, b) => a + (b.totalCost || 0), 0);
+  const issued = list.reduce((a, b) => a + (b.issued || 0), 0);
+  document.getElementById("kpi-c-records").textContent = fmt(list.length);
+  document.getElementById("kpi-c-cost").textContent = money(cost);
+  document.getElementById("kpi-c-issued").textContent = fmt(issued);
+  document.getElementById("kpi-c-items").textContent = fmt(items.size);
+}
+
+function renderConsumptionTable() {
+  const list = getFilteredConsumption();
+  renderConsumptionKPIs(list);
+  const tbody = document.querySelector("#consumption-table tbody");
+  tbody.innerHTML = "";
+  const start = (consumptionPage - 1) * PAGE_SIZE;
+  const pageRows = list.slice(start, start + PAGE_SIZE);
+  for (const c of pageRows) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(c.no)}</td>
+      <td>${escapeHtml(c.date)}</td>
+      <td>${escapeHtml(c.irNo)}</td>
+      <td>${escapeHtml(c.itemCode)}</td>
+      <td>${escapeHtml(c.itemName)}</td>
+      <td>${escapeHtml(c.warehouse)}</td>
+      <td>${escapeHtml(c.mill)}</td>
+      <td>${escapeHtml(c.usageArea)}</td>
+      <td>${fmt(c.issued)}</td>
+      <td>${escapeHtml(c.uom)}</td>
+      <td>${money(c.rate)}</td>
+      <td>${money(c.totalCost)}</td>
+      <td>${escapeHtml(c.profitCenter)}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+  renderGenericPagination("consumption-pagination", list.length, consumptionPage, (p) => { consumptionPage = p; renderConsumptionTable(); });
+  renderMonthlyCostChart(list);
+}
+
+function renderMonthlyCostChart(list) {
+  const map = {};
+  for (const c of list) {
+    const m = (c.date || "").slice(0, 7);
+    if (!m) continue;
+    map[m] = (map[m] || 0) + (c.totalCost || 0);
+  }
+  const labels = Object.keys(map).sort();
+  const data = labels.map(l => map[l]);
+  const ctx = document.getElementById("chart-monthly-cost");
+  if (charts.monthlyCost) charts.monthlyCost.destroy();
+  charts.monthlyCost = new Chart(ctx, {
+    type: "bar",
+    data: { labels, datasets: [{ label: "Monthly Cost (BDT)", data, backgroundColor: "#dc2626" }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: "Monthly Consumption Cost" } }, scales: { y: { beginAtZero: true } } }
+  });
+}
+
+function getFilteredAssets() {
+  return ASSETS.filter(a => {
+    const q = (assetsFilters.search || "").toLowerCase();
+    if (q) {
+      const hay = (a.assetTag + " " + a.assetName + " " + a.serial + " " + a.ip).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (assetsFilters.status && a.status.toLowerCase() !== assetsFilters.status.toLowerCase()) return false;
+    if (assetsFilters.category && a.category.toLowerCase() !== assetsFilters.category.toLowerCase() && a.deviceType.toLowerCase() !== assetsFilters.category.toLowerCase()) return false;
+    if (assetsFilters.brand && !a.brand.toLowerCase().includes(assetsFilters.brand.toLowerCase())) return false;
+    if (assetsFilters.plant) {
+      const hay = (a.plant + " " + a.warehouse + " " + a.location).toLowerCase();
+      if (!hay.includes(assetsFilters.plant.toLowerCase())) return false;
+    }
+    return true;
+  });
+}
+
+function renderAssetsKPIs(list) {
+  const assigned = list.filter(a => a.assignedTo && a.assignedTo.trim() !== "").length;
+  const available = list.filter(a => a.status.toLowerCase() === "available" || a.status.toLowerCase() === "in stock").length;
+  const maint = list.filter(a => /maint/i.test(a.status)).length;
+  document.getElementById("kpi-a-total").textContent = fmt(list.length);
+  document.getElementById("kpi-a-assigned").textContent = fmt(assigned);
+  document.getElementById("kpi-a-available").textContent = fmt(available);
+  document.getElementById("kpi-a-maint").textContent = fmt(maint);
+}
+
+function renderAssetsTable() {
+  const list = getFilteredAssets();
+  renderAssetsKPIs(list);
+  const tbody = document.querySelector("#assets-table tbody");
+  tbody.innerHTML = "";
+  const start = (assetsPage - 1) * PAGE_SIZE;
+  const pageRows = list.slice(start, start + PAGE_SIZE);
+  for (const a of pageRows) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(a.no)}</td>
+      <td>${escapeHtml(a.assetTag)}</td>
+      <td>${escapeHtml(a.assetName)}</td>
+      <td>${escapeHtml(a.category)}</td>
+      <td>${escapeHtml(a.deviceType)}</td>
+      <td>${escapeHtml(a.brand)}</td>
+      <td>${escapeHtml(a.model)}</td>
+      <td>${escapeHtml(a.serial)}</td>
+      <td>${escapeHtml(a.ip)}</td>
+      <td>${escapeHtml(a.location)}</td>
+      <td>${escapeHtml(a.plant)}</td>
+      <td>${escapeHtml(a.warehouse)}</td>
+      <td>${escapeHtml(a.assignedTo)}</td>
+      <td>${escapeHtml(a.department)}</td>
+      <td>${escapeHtml(a.warrantyEnd)}</td>
+      <td><span class="badge ${/available|in stock/i.test(a.status) ? "ok" : "down"}">${escapeHtml(a.status)}</span></td>
+    `;
+    tbody.appendChild(tr);
+  }
+  renderGenericPagination("assets-pagination", list.length, assetsPage, (p) => { assetsPage = p; renderAssetsTable(); });
+}
+
+function getFilteredItems() {
+  return ITEMS.filter(i => {
+    const q = (itemsFilters.search || "").toLowerCase();
+    if (q) {
+      const hay = (i.code + " " + i.item + " " + i.category + " " + i.subCategory).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (itemsFilters.category && i.category.toLowerCase() !== itemsFilters.category.toLowerCase()) return false;
+    if (itemsFilters.warehouse && !i.warehouse.toLowerCase().includes(itemsFilters.warehouse.toLowerCase())) return false;
+    return true;
+  });
+}
+
+function renderItemsKPIs(list) {
+  const cats = new Set(list.map(x => x.category));
+  const sum = list.reduce((a, b) => a + (b.rate || 0), 0);
+  document.getElementById("kpi-i-total").textContent = fmt(list.length);
+  document.getElementById("kpi-i-sum").textContent = money(sum);
+  document.getElementById("kpi-i-cats").textContent = fmt(cats.size);
+}
+
+function renderItemsTable() {
+  const list = getFilteredItems();
+  renderItemsKPIs(list);
+  const tbody = document.querySelector("#items-table tbody");
+  tbody.innerHTML = "";
+  const start = (itemsPage - 1) * PAGE_SIZE;
+  const pageRows = list.slice(start, start + PAGE_SIZE);
+  for (const i of pageRows) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(i.no)}</td>
+      <td>${escapeHtml(i.code)}</td>
+      <td>${escapeHtml(i.item)}</td>
+      <td>${escapeHtml(i.itemType)}</td>
+      <td>${escapeHtml(i.category)}</td>
+      <td>${escapeHtml(i.subCategory)}</td>
+      <td>${escapeHtml(i.uom)}</td>
+      <td>${money(i.rate)}</td>
+      <td>${escapeHtml(i.warehouse)}</td>
+      <td>${escapeHtml(i.remark)}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+  renderGenericPagination("items-pagination", list.length, itemsPage, (p) => { itemsPage = p; renderItemsTable(); });
+}
+
+function renderGenericPagination(containerId, total, currentPage, onPageChange) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const info = document.createElement("span");
+  info.className = "page-info";
+  info.textContent = `Page ${currentPage} of ${totalPages} (${total} records)`;
+  const prev = document.createElement("button");
+  prev.textContent = "Prev";
+  prev.disabled = currentPage <= 1;
+  prev.addEventListener("click", () => { if (currentPage > 1) onPageChange(currentPage - 1); });
+  const next = document.createElement("button");
+  next.textContent = "Next";
+  next.disabled = currentPage >= totalPages;
+  next.addEventListener("click", () => { if (currentPage < totalPages) onPageChange(currentPage + 1); });
+  container.appendChild(prev);
+  container.appendChild(info);
+  container.appendChild(next);
+}
+
+function populateAssetsFilters() {
+  const statusSel = document.getElementById("a-status");
+  const catSel = document.getElementById("a-category");
+  const statuses = new Set();
+  const cats = new Set();
+  ASSETS.forEach(a => { if (a.status) statuses.add(a.status); if (a.category) cats.add(a.category); if (a.deviceType) cats.add(a.deviceType); });
+  while (statusSel.options.length > 1) statusSel.remove(1);
+  while (catSel.options.length > 1) catSel.remove(1);
+  [...statuses].sort().forEach(s => { const o = document.createElement("option"); o.value = s; o.textContent = s; statusSel.appendChild(o); });
+  [...cats].sort().forEach(c => { const o = document.createElement("option"); o.value = c; o.textContent = c; catSel.appendChild(o); });
+}
+
+function populateItemsFilters() {
+  const catSel = document.getElementById("i-category");
+  const cats = new Set();
+  ITEMS.forEach(i => { if (i.category) cats.add(i.category); });
+  while (catSel.options.length > 1) catSel.remove(1);
+  [...cats].sort().forEach(c => { const o = document.createElement("option"); o.value = c; o.textContent = c; catSel.appendChild(o); });
+}
+
 function populateTypeFilter() {
   const sel = document.getElementById("f-type");
   const types = new Set();
@@ -561,17 +890,36 @@ async function loadData() {
     const results = await Promise.allSettled([
       fetchSheet("Downtime Incidents"),
       fetchSheet("Downtime by Day"),
-      fetchSheet("Downtime Summary")
+      fetchSheet("Downtime Summary"),
+      fetchSheet("IT Consumption"),
+      fetchSheet("IT Assets"),
+      (async () => {
+        const res = await fetch("https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/export?format=csv&gid=278364623", { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status + " for Item List");
+        return parseCSV(await res.text());
+      })()
     ]);
     if (results[0].status === "fulfilled") INCIDENTS = parseIncidents(results[0].value);
     if (results[1].status === "fulfilled") DATE_INCIDENTS = parseDateIncidents(results[1].value);
     if (results[2].status === "fulfilled") DEVICE_DOWNTIME = parseDeviceDowntime(results[2].value);
+    if (results[3].status === "fulfilled") CONSUMPTION = parseConsumption(results[3].value);
+    else console.warn("consumption fetch failed", results[3].reason);
+    if (results[4].status === "fulfilled") ASSETS = parseAssets(results[4].value);
+    else console.warn("assets fetch failed", results[4].reason);
+    if (results[5].status === "fulfilled") ITEMS = parseItems(results[5].value);
+    else console.warn("items fetch failed", results[5].reason);
+
 
     populateTypeFilter();
+    populateAssetsFilters();
+    populateItemsFilters();
     renderIncidentKPIs(getFilteredIncidents());
     renderIncidentsTable();
     renderDateIncidents();
     renderDeviceDowntime();
+    renderConsumptionTable();
+    renderAssetsTable();
+    renderItemsTable();
 
     document.getElementById("generated-at").textContent = "Generated: " + d.generated;
     status.textContent = "Updated " + new Date().toLocaleTimeString();
@@ -620,5 +968,70 @@ document.addEventListener("DOMContentLoaded", () => {
     renderIncidentsTable();
     renderDateIncidents();
     renderDeviceDowntime();
+  });
+
+  // Consumption filters
+  document.getElementById("apply-consumption").addEventListener("click", () => {
+    consumptionFilters.from = document.getElementById("c-date-from").value;
+    consumptionFilters.to = document.getElementById("c-date-to").value;
+    consumptionFilters.item = document.getElementById("c-item").value.trim();
+    consumptionFilters.warehouse = document.getElementById("c-warehouse").value.trim();
+    consumptionFilters.mill = document.getElementById("c-mill").value.trim();
+    consumptionPage = 1;
+    document.getElementById("consumption-status").textContent = "Filters applied";
+    renderConsumptionTable();
+  });
+  document.getElementById("reset-consumption").addEventListener("click", () => {
+    consumptionFilters = { from: "", to: "", item: "", warehouse: "", mill: "" };
+    document.getElementById("c-date-from").value = "";
+    document.getElementById("c-date-to").value = "";
+    document.getElementById("c-item").value = "";
+    document.getElementById("c-warehouse").value = "";
+    document.getElementById("c-mill").value = "";
+    consumptionPage = 1;
+    document.getElementById("consumption-status").textContent = "Filters reset";
+    renderConsumptionTable();
+  });
+
+  // Assets filters
+  document.getElementById("apply-assets").addEventListener("click", () => {
+    assetsFilters.search = document.getElementById("a-search").value.trim();
+    assetsFilters.status = document.getElementById("a-status").value;
+    assetsFilters.category = document.getElementById("a-category").value;
+    assetsFilters.brand = document.getElementById("a-brand").value.trim();
+    assetsFilters.plant = document.getElementById("a-plant").value.trim();
+    assetsPage = 1;
+    document.getElementById("assets-status").textContent = "Filters applied";
+    renderAssetsTable();
+  });
+  document.getElementById("reset-assets").addEventListener("click", () => {
+    assetsFilters = { search: "", status: "", category: "", brand: "", plant: "" };
+    document.getElementById("a-search").value = "";
+    document.getElementById("a-status").value = "";
+    document.getElementById("a-category").value = "";
+    document.getElementById("a-brand").value = "";
+    document.getElementById("a-plant").value = "";
+    assetsPage = 1;
+    document.getElementById("assets-status").textContent = "Filters reset";
+    renderAssetsTable();
+  });
+
+  // Items filters
+  document.getElementById("apply-items").addEventListener("click", () => {
+    itemsFilters.search = document.getElementById("i-search").value.trim();
+    itemsFilters.category = document.getElementById("i-category").value;
+    itemsFilters.warehouse = document.getElementById("i-warehouse").value.trim();
+    itemsPage = 1;
+    document.getElementById("items-status").textContent = "Filters applied";
+    renderItemsTable();
+  });
+  document.getElementById("reset-items").addEventListener("click", () => {
+    itemsFilters = { search: "", category: "", warehouse: "" };
+    document.getElementById("i-search").value = "";
+    document.getElementById("i-category").value = "";
+    document.getElementById("i-warehouse").value = "";
+    itemsPage = 1;
+    document.getElementById("items-status").textContent = "Filters reset";
+    renderItemsTable();
   });
 });

@@ -121,6 +121,109 @@
     </section>
 
     <section class="section">
+      <h2>IT Consumption Report</h2>
+      <div class="card">
+        <div class="filter-grid">
+          <label>Date from <input type="date" id="c-date-from"></label>
+          <label>Date to <input type="date" id="c-date-to"></label>
+          <label>Item <input type="text" id="c-item" placeholder="Item name/code"></label>
+          <label>Warehouse <input type="text" id="c-warehouse" placeholder="Warehouse"></label>
+          <label>Mill <input type="text" id="c-mill" placeholder="Mill"></label>
+        </div>
+        <div class="filter-actions">
+          <button id="apply-consumption" class="primary">Apply</button>
+          <button id="reset-consumption">Reset</button>
+          <span id="consumption-status" class="loading"></span>
+        </div>
+      </div>
+      <div class="grid kpi-grid" id="consumption-kpis">
+        <div class="card kpi accent-danger"><span class="label">Records</span><span class="value" id="kpi-c-records">-</span></div>
+        <div class="card kpi accent-purple"><span class="label">Total Cost (BDT)</span><span class="value" id="kpi-c-cost">-</span></div>
+        <div class="card kpi accent-teal"><span class="label">Issued Amount</span><span class="value" id="kpi-c-issued">-</span></div>
+        <div class="card kpi accent-primary"><span class="label">Unique Items</span><span class="value" id="kpi-c-items">-</span></div>
+      </div>
+      <div class="card chart-card"><canvas id="chart-monthly-cost"></canvas></div>
+      <div class="card">
+        <div class="table-wrap">
+          <table id="consumption-table">
+            <thead><tr>
+              <th>No</th><th>Date</th><th>IR No.</th><th>Item Code</th><th>Item Name</th><th>Warehouse</th><th>Mill</th><th>Usage Area</th><th>Issued</th><th>UoM</th><th>Rate</th><th>Total Cost</th><th>Profit Center</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="consumption-pagination"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>IT Assets (Details)</h2>
+      <div class="card">
+        <div class="filter-grid">
+          <label>Search <input type="text" id="a-search" placeholder="Tag/Name/Serial/IP"></label>
+          <label>Status <select id="a-status"><option value="">All</option></select></label>
+          <label>Category <select id="a-category"><option value="">All</option></select></label>
+          <label>Brand <input type="text" id="a-brand" placeholder="Brand"></label>
+          <label>Plant/Warehouse <input type="text" id="a-plant" placeholder="Plant"></label>
+        </div>
+        <div class="filter-actions">
+          <button id="apply-assets" class="primary">Apply</button>
+          <button id="reset-assets">Reset</button>
+          <span id="assets-status" class="loading"></span>
+        </div>
+      </div>
+      <div class="grid kpi-grid" id="assets-kpis">
+        <div class="card kpi accent-primary"><span class="label">Total Assets</span><span class="value" id="kpi-a-total">-</span></div>
+        <div class="card kpi accent-success"><span class="label">Assigned</span><span class="value" id="kpi-a-assigned">-</span></div>
+        <div class="card kpi accent-warning"><span class="label">Available</span><span class="value" id="kpi-a-available">-</span></div>
+        <div class="card kpi accent-danger"><span class="label">Under Maintenance</span><span class="value" id="kpi-a-maint">-</span></div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table id="assets-table">
+            <thead><tr>
+              <th>No</th><th>Asset Tag</th><th>Asset Item Name</th><th>Category</th><th>Device Type</th><th>Brand</th><th>Model</th><th>Serial</th><th>IP Address</th><th>Location</th><th>Plant</th><th>Warehouse</th><th>Assigned To</th><th>Department</th><th>Warranty End</th><th>Status</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="assets-pagination"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Item List</h2>
+      <div class="card">
+        <div class="filter-grid">
+          <label>Search <input type="text" id="i-search" placeholder="Code/Item/Category"></label>
+          <label>Category <select id="i-category"><option value="">All</option></select></label>
+          <label>Warehouse <input type="text" id="i-warehouse" placeholder="Warehouse"></label>
+        </div>
+        <div class="filter-actions">
+          <button id="apply-items" class="primary">Apply</button>
+          <button id="reset-items">Reset</button>
+          <span id="items-status" class="loading"></span>
+        </div>
+      </div>
+      <div class="grid kpi-grid" id="items-kpis">
+        <div class="card kpi accent-primary"><span class="label">Total Items</span><span class="value" id="kpi-i-total">-</span></div>
+        <div class="card kpi accent-teal"><span class="label">Sum of Rates (BDT)</span><span class="value" id="kpi-i-sum">-</span></div>
+        <div class="card kpi accent-success"><span class="label">Unique Categories</span><span class="value" id="kpi-i-cats">-</span></div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table id="items-table">
+            <thead><tr>
+              <th>No</th><th>Code</th><th>Item</th><th>Item Type</th><th>Category</th><th>Sub-Category</th><th>UoM</th><th>Rate (BDT)</th><th>Warehouse</th><th>Remark</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="items-pagination"></div>
+      </div>
+    </section>
+
+    <section class="section">
       <h2>Charts</h2>
       <div class="grid charts">
         <div class="card chart-card"><canvas id="chart-devices"></canvas></div>
