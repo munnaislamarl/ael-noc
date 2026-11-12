@@ -1036,7 +1036,6 @@ function renderDevicesTable() {
   const q = (document.getElementById("dev-search")?.value || "").toLowerCase();
   const st = (document.getElementById("dev-status")?.value || "").toLowerCase();
   const ty = (document.getElementById("dev-type")?.value || "").toLowerCase();
-  const mo = (document.getElementById("dev-month")?.value || "");
   tbody.innerHTML = "";
   DEVICES.filter(d => {
     if (q) {
@@ -1045,10 +1044,6 @@ function renderDevicesTable() {
     }
     if (st && d.status.toLowerCase() !== st) return false;
     if (ty && d.type.toLowerCase() !== ty) return false;
-    if (mo) {
-      const m = (d.lastChecked || "").slice(0,7);
-      if (m !== mo) return false;
-    }
     return true;
   }).forEach(d => {
     const tr = document.createElement("tr");
@@ -1069,42 +1064,126 @@ function renderDevicesTable() {
 
 function renderDowntimeReportTable() {
   const tbody = document.querySelector("#downtime-report-table tbody");
-  if (!tbody) return;
+  const dateCard = document.getElementById("dr-date-table-card");
+  const incCard = document.getElementById("dr-incidents-card");
+  const view = document.getElementById("dr-view")?.value || "device";
+  // show/hide tables
+  if (tbody) tbody.parentElement.parentElement.style.display = (view === "device") ? "" : "none";
+  if (dateCard) dateCard.style.display = (view === "date") ? "" : "none";
+  if (incCard) incCard.style.display = (view === "all") ? "" : "none";
+
   const q = (document.getElementById("dr-search")?.value || "").toLowerCase();
-  const st = (document.getElementById("dr-status")?.value || "").toLowerCase();
   const ty = (document.getElementById("dr-type")?.value || "").toLowerCase();
-  const mo = (document.getElementById("dr-month")?.value || "");
-  tbody.innerHTML = "";
-  DOWNTIME_REPORT.filter(d => {
-    if (q) {
-      const hay = (d.device + " " + d.type + " " + d.location + " " + d.ip).toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
-    if (st && d.now.toLowerCase() !== st) return false;
-    if (ty && d.type.toLowerCase() !== ty) return false;
-    if (mo) {
-      const mm = (d.firstDown || "").slice(0,7);
-      if (mm !== mo) return false;
-    }
+  const dev = (document.getElementById("dr-device")?.value || "").toLowerCase();
+  const from = document.getElementById("dr-from")?.value || "";
+  const to = document.getElementById("dr-to")?.value || "";
+
+  // filter incidents by date/device/type for "all" view and KPIs
+  const filteredInc = INCIDENTS.filter(i => {
+    if (q && !(i.device.toLowerCase().includes(q) || i.ip.includes(q))) return false;
+    if (ty && i.type.toLowerCase() !== ty) return false;
+    if (dev && i.device.toLowerCase() !== dev) return false;
+    if (from && i.downFrom && i.downFrom < from) return false;
+    if (to && i.downFrom && i.downFrom.slice(0,10) > to) return false;
     return true;
-  }).forEach(d => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${escapeHtml(d.no)}</td>
-      <td>${escapeHtml(d.device)}</td>
-      <td>${escapeHtml(d.ip)}</td>
-      <td>${escapeHtml(d.type)}</td>
-      <td>${escapeHtml(d.location)}</td>
-      <td>${escapeHtml(d.downTimes)}</td>
-      <td>${escapeHtml(d.upTimes)}</td>
-      <td>${escapeHtml(d.totalDowntime)}</td>
-      <td>${escapeHtml(d.minutes)}</td>
-      <td>${escapeHtml(d.longest)}</td>
-      <td>${escapeHtml(d.availability)}</td>
-      <td><span class="badge ${d.now.toLowerCase() === "up" ? "ok" : "down"}">${escapeHtml(d.now)}</span></td>
-    `;
-    tbody.appendChild(tr);
   });
+
+  // KPIs
+  const devicesWithDowntime = new Set(filteredInc.map(i => i.device)).size;
+  const totalDevices = DEVICES.length || 250;
+  const wentDown = filteredInc.length;
+  const cameUp = filteredInc.filter(i => i.state.toLowerCase() !== "ongoing").length;
+  const totalMin = filteredInc.reduce((a,b) => a + (b.minutes||0), 0);
+  const stillDown = filteredInc.filter(i => i.state.toLowerCase() === "ongoing").length;
+  const el = (id) => document.getElementById(id);
+  if (el("kpi-dr-devices")) el("kpi-dr-devices").textContent = devicesWithDowntime + " / " + totalDevices;
+  if (el("kpi-dr-wentup")) el("kpi-dr-wentup").textContent = wentDown + " / " + cameUp;
+  if (el("kpi-dr-total")) el("kpi-dr-total").textContent = formatDowntime(totalMin);
+  if (el("kpi-dr-still")) el("kpi-dr-still").textContent = stillDown;
+  if (el("dr-period")) el("dr-period").textContent = (from || "2026-11-01") + " → " + (to || "2026-11-12");
+
+  // By device table
+  if (tbody) {
+    tbody.innerHTML = "";
+    const filteredDev = DOWNTIME_REPORT.filter(d => {
+      if (q) {
+        const hay = (d.device + " " + d.type + " " + d.location + " " + d.ip).toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (ty && d.type.toLowerCase() !== ty) return false;
+      if (dev && d.device.toLowerCase() !== dev) return false;
+      return true;
+    });
+    filteredDev.forEach(d => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(d.no)}</td>
+        <td>${escapeHtml(d.device)}</td>
+        <td>${escapeHtml(d.ip)}</td>
+        <td>${escapeHtml(d.type)}</td>
+        <td>${escapeHtml(d.location)}</td>
+        <td>${escapeHtml(d.downTimes)}</td>
+        <td>${escapeHtml(d.upTimes)}</td>
+        <td>${escapeHtml(d.totalDowntime)}</td>
+        <td>${escapeHtml(d.minutes)}</td>
+        <td>${escapeHtml(d.longest)}</td>
+        <td>${escapeHtml(d.availability)}</td>
+        <td><span class="badge ${d.now.toLowerCase() === "up" ? "ok" : "down"}">${escapeHtml(d.now)}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // By date table
+  const dateTbody = document.querySelector("#dr-date-table tbody");
+  if (dateTbody) {
+    dateTbody.innerHTML = "";
+    const map = {};
+    filteredInc.forEach(i => {
+      const dt = (i.downFrom || "").slice(0,10);
+      if (!dt) return;
+      if (!map[dt]) map[dt] = { date: dt, incidents: 0, devices: new Set(), minutes: 0 };
+      map[dt].incidents++;
+      map[dt].devices.add(i.device);
+      map[dt].minutes += i.minutes || 0;
+    });
+    Object.values(map).sort((a,b) => a.date.localeCompare(b.date)).forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${escapeHtml(r.date)}</td><td>${fmt(r.incidents)}</td><td>${fmt(r.devices.size)}</td><td>${fmt(Math.round(r.minutes))}</td>`;
+      dateTbody.appendChild(tr);
+    });
+  }
+
+  // All incidents table
+  const incTbody = document.querySelector("#dr-incidents-table tbody");
+  if (incTbody) {
+    incTbody.innerHTML = "";
+    filteredInc.slice(0, 500).forEach(i => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(i.device)}</td>
+        <td>${escapeHtml(i.ip)}</td>
+        <td>${escapeHtml(i.type)}</td>
+        <td>${escapeHtml(i.location)}</td>
+        <td>${escapeHtml(i.downFrom)}</td>
+        <td>${escapeHtml(i.backUp || "-")}</td>
+        <td>${escapeHtml(i.duration)}</td>
+        <td><span class="badge ${i.state.toLowerCase() === "ongoing" ? "down" : "ok"}">${escapeHtml(i.state)}</span></td>
+      `;
+      incTbody.appendChild(tr);
+    });
+  }
+}
+
+function formatDowntime(mins) {
+  const d = Math.floor(mins / 1440);
+  const h = Math.floor((mins % 1440) / 60);
+  const m = Math.round(mins % 60);
+  let s = "";
+  if (d) s += d + "d ";
+  if (h) s += h + "h ";
+  s += m + "m";
+  return s.trim();
 }
 
 function renderActivityTable() {
@@ -1389,7 +1468,7 @@ async function loadData() {
     populateMonthSelect("c-month", CONSUMPTION.map(x => x.date));
     populateMonthSelect("a-month", ASSETS.map(x => x.created));
     populateMonthSelect("i-month", ITEMS.map(x => x.created));
-    populateMonthSelect("dev-month", DEVICES.map(x => x.lastChecked));
+
     populateMonthSelect("m-month", MAINTENANCE.map(x => x.date));
     populateMonthSelect("dr-month", DOWNTIME_REPORT.map(x => x.firstDown));
     populateMonthSelect("log-month", ACTIVITY_LOG.map(x => x.time));
@@ -1422,6 +1501,12 @@ async function loadData() {
         const vals = [...new Set(DOWNTIME_REPORT.map(d => d.type).filter(Boolean))].sort();
         while (drType.options.length > 1) drType.remove(1);
         vals.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; drType.appendChild(o); });
+      }
+      const drDev = document.getElementById("dr-device");
+      if (drDev) {
+        const vals = [...new Set(INCIDENTS.map(i => i.device).filter(Boolean))].sort();
+        while (drDev.options.length > 1) drDev.remove(1);
+        vals.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; drDev.appendChild(o); });
       }
       const logKind = document.getElementById("log-kind");
       if (logKind) {
@@ -1704,9 +1789,8 @@ document.addEventListener("DOMContentLoaded", () => {
   bindAuto(["c-date-from","c-date-to","c-item","c-warehouse","c-mill","c-month"], applyConsumptionFilters);
   bindAuto(["a-search","a-status","a-category","a-brand","a-plant","a-month"], applyAssetsFilters);
   bindAuto(["i-search","i-category","i-warehouse","i-month"], applyItemsFilters);
-  bindAuto(["dev-search","dev-status","dev-type","dev-month"], renderDevicesTable);
+  bindAuto(["dev-search","dev-status","dev-type"], renderDevicesTable);
   bindAuto(["m-search","m-status","m-type","m-month"], renderMaintenanceTable);
-  bindAuto(["dr-search","dr-status","dr-type","dr-month"], renderDowntimeReportTable);
   bindAuto(["log-search","log-kind","log-month"], renderActivityTable);
   bindAuto(["u-search","u-role","u-month"], renderUsersTable);
   bindAuto(["pu-search","pu-status","pu-month"], renderPendingUsersTable);
@@ -1723,11 +1807,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Reset buttons
   const resetDev = document.getElementById("reset-dev");
-  if (resetDev) resetDev.addEventListener("click", () => { document.getElementById("dev-search").value=""; document.getElementById("dev-status").value=""; document.getElementById("dev-type").value=""; document.getElementById("dev-month").value=""; renderDevicesTable(); });
+  if (resetDev) resetDev.addEventListener("click", () => { document.getElementById("dev-search").value=""; document.getElementById("dev-status").value=""; document.getElementById("dev-type").value=""; renderDevicesTable(); });
   const resetMaint = document.getElementById("reset-maint");
   if (resetMaint) resetMaint.addEventListener("click", () => { document.getElementById("m-search").value=""; document.getElementById("m-status").value=""; document.getElementById("m-type").value=""; document.getElementById("m-month").value=""; renderMaintenanceTable(); });
   const resetDr = document.getElementById("reset-dr");
-  if (resetDr) resetDr.addEventListener("click", () => { document.getElementById("dr-search").value=""; document.getElementById("dr-status").value=""; document.getElementById("dr-type").value=""; document.getElementById("dr-month").value=""; renderDowntimeReportTable(); });
+  if (resetDr) resetDr.addEventListener("click", () => {
+    document.getElementById("dr-search").value = "";
+    if (document.getElementById("dr-type")) document.getElementById("dr-type").value = "";
+    if (document.getElementById("dr-device")) document.getElementById("dr-device").value = "";
+    if (document.getElementById("dr-from")) document.getElementById("dr-from").value = "";
+    if (document.getElementById("dr-to")) document.getElementById("dr-to").value = "";
+    renderDowntimeReportTable();
+  });
+  const showDr = document.getElementById("dr-show");
+  if (showDr) showDr.addEventListener("click", renderDowntimeReportTable);
+  const drView = document.getElementById("dr-view");
+  if (drView) drView.addEventListener("change", renderDowntimeReportTable);
+  // quick date buttons
+  document.querySelectorAll(".quick-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const r = btn.dataset.range;
+      const fromEl = document.getElementById("dr-from");
+      const toEl = document.getElementById("dr-to");
+      const today = new Date();
+      const fmt = (d) => d.toISOString().slice(0,10);
+      if (r === "today") { fromEl.value = fmt(today); toEl.value = fmt(today); }
+      else if (r === "yesterday") { const y = new Date(today); y.setDate(y.getDate()-1); fromEl.value = fmt(y); toEl.value = fmt(y); }
+      else if (r === "month") { const first = new Date(today.getFullYear(), today.getMonth(), 1); fromEl.value = fmt(first); toEl.value = fmt(today); }
+      else { const n = parseInt(r,10); const from = new Date(today); from.setDate(from.getDate()-n+1); fromEl.value = fmt(from); toEl.value = fmt(today); }
+      renderDowntimeReportTable();
+    });
+  });
+  bindAuto(["dr-search","dr-type","dr-device","dr-from","dr-to"], renderDowntimeReportTable);
   const resetLog = document.getElementById("reset-log");
   if (resetLog) resetLog.addEventListener("click", () => { document.getElementById("log-search").value=""; document.getElementById("log-kind").value=""; document.getElementById("log-month").value=""; renderActivityTable(); });
   const resetUser = document.getElementById("reset-user");

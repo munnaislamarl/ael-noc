@@ -119,7 +119,6 @@
               <label>Search <input type="text" id="dev-search" placeholder="Name/IP/Type/Location"></label>
               <label>Status <select id="dev-status"><option value="">All</option><option>UP</option><option>DOWN</option></select></label>
               <label>Type <select id="dev-type"><option value="">All</option></select></label>
-              <label>Month <select id="dev-month"><option value="">All</option></select></label>
             </div>
             <div class="filter-actions">
               <button id="reset-dev" class="primary">Reset</button>
@@ -276,18 +275,39 @@
 
         <!-- Reports -->
         <section class="section" data-page="downtime-report">
-          <h2>Downtime Report</h2>
+          <h2>Downtime Report (date wise)</h2>
           <div class="card">
             <div class="filter-grid">
-              <label>Search <input type="text" id="dr-search" placeholder="Device/Type/Location"></label>
-              <label>Status <select id="dr-status"><option value="">All</option><option>up</option><option>down</option></select></label>
-              <label>Type <select id="dr-type"><option value="">All</option></select></label>
-              <label>Month <select id="dr-month"><option value="">All</option></select></label>
+              <label>Search device name / IP <input type="text" id="dr-search" placeholder="Type device name…"></label>
+              <label>Device type <select id="dr-type"><option value="">All types</option></select></label>
+              <label>Device <select id="dr-device"><option value="">All devices</option></select></label>
+              <label>From <input type="date" id="dr-from"></label>
+              <label>To <input type="date" id="dr-to"></label>
             </div>
             <div class="filter-actions">
-              <button id="reset-dr" class="primary">Reset</button>
+              <button id="dr-show" class="primary">Show report</button>
+              <button id="reset-dr">↺ Reset</button>
+              <button class="quick-btn" data-range="today">Today</button>
+              <button class="quick-btn" data-range="yesterday">Yesterday</button>
+              <button class="quick-btn" data-range="7">Last 7 days</button>
+              <button class="quick-btn" data-range="14">Last 14 days</button>
+              <button class="quick-btn" data-range="30">Last 30 days</button>
+              <button class="quick-btn" data-range="month">This month</button>
               <span id="dr-status-msg" class="loading"></span>
             </div>
+            <div class="filter-actions" style="margin-top:6px;">
+              <span class="page-info">Period: <b id="dr-period">-</b></span>
+              <label style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted);">
+                View:
+                <select id="dr-view"><option value="device">By device</option><option value="date">By date</option><option value="all">All incidents</option></select>
+              </label>
+            </div>
+          </div>
+          <div class="grid kpi-grid">
+            <div class="card kpi accent-primary"><span class="label">Devices with downtime</span><span class="value" id="kpi-dr-devices">-</span></div>
+            <div class="card kpi accent-danger"><span class="label">Went DOWN / came UP</span><span class="value" id="kpi-dr-wentup">-</span></div>
+            <div class="card kpi accent-purple"><span class="label">Total downtime</span><span class="value" id="kpi-dr-total">-</span></div>
+            <div class="card kpi accent-warning"><span class="label">Still down now</span><span class="value" id="kpi-dr-still">-</span></div>
           </div>
           <div class="card">
             <div class="table-wrap">
@@ -295,6 +315,22 @@
                 <thead><tr>
                   <th>No</th><th>Device</th><th>IP address</th><th>Type</th><th>Location</th><th>Down (times)</th><th>Up (times)</th><th>Total downtime</th><th>Downtime (min)</th><th>Longest outage</th><th>Availability (%)</th><th>Now</th>
                 </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card" id="dr-date-table-card" style="display:none;">
+            <div class="table-wrap">
+              <table id="dr-date-table">
+                <thead><tr><th>Date</th><th>Incidents</th><th>Devices</th><th>Downtime (min)</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card" id="dr-incidents-card" style="display:none;">
+            <div class="table-wrap">
+              <table id="dr-incidents-table">
+                <thead><tr><th>Device</th><th>IP</th><th>Type</th><th>Location</th><th>Down from</th><th>Back up at</th><th>Duration</th><th>State</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
