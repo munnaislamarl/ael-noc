@@ -1136,31 +1136,224 @@ function incDay(i) {
   return "";
 }
 
-function toggleDrDetail(tr) {
-  const next = tr.nextElementSibling;
-  if (next && next.classList.contains("dr-detail")) {
-    next.remove();
-    tr.classList.remove("open");
-    return;
+/* ---------- Device incident modal (Downtime report) ---------- */
+const DM_RANGES = [
+  ["all", "All history"], ["today", "Today"], ["yesterday", "Yesterday"],
+  ["7", "Last 7 days"], ["14", "Last 14 days"], ["30", "Last 30 days"],
+  ["month", "This month"], ["lastmonth", "Last month"]
+];
+let DM = { device: "", range: "all", rows: [] };
+
+function parseTs(str) {
+  if (!str) return null;
+  const d = new Date(String(str).trim().replace(" ", "T"));
+  return isNaN(d.getTime()) ? null : d.getTime();
+}
+function incSeconds(i) {
+  const st = parseTs(i.downFrom), en = parseTs(i.backUp);
+  const ongoing = (i.state || "").toLowerCase() === "ongoing";
+  if (st && en && !ongoing) return Math.max(0, (en - st) / 1000);
+  if (st && ongoing) return Math.max(0, (Date.now() - st) / 1000);
+  return (i.minutes || 0) * 60;
+}
+function fmtDur(sec) {
+  sec = Math.round(sec || 0);
+  const p = (n) => String(n).padStart(2, "0");
+  if (sec < 60) return sec + "s";
+  if (sec < 3600) return p(Math.floor(sec / 60)) + "m " + p(sec % 60) + "s";
+  const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60);
+  return (d ? d + "d " : "") + (d || h ? h + "h " : "") + p(m) + "m";
+}
+/* returns [fromStr, toStr] (YYYY-MM-DD) or ["",""] for all history */
+function quickRangeDates(r) {
+  const today = new Date(), f = localDateStr;
+  if (r === "all") return ["", ""];
+  if (r === "today") return [f(today), f(today)];
+  if (r === "yesterday") { const y = new Date(today); y.setDate(y.getDate() - 1); return [f(y), f(y)]; }
+  if (r === "month") return [f(new Date(today.getFullYear(), today.getMonth(), 1)), f(today)];
+  if (r === "lastmonth") return [f(new Date(today.getFullYear(), today.getMonth() - 1, 1)), f(new Date(today.getFullYear(), today.getMonth(), 0))];
+  const n = parseInt(r, 10) || 7; const from = new Date(today); from.setDate(from.getDate() - n + 1);
+  return [f(from), f(today)];
+}
+function deviceIcon(type) {
+  const t = (type || "").toLowerCase();
+  if (t.includes("camera")) return "📷";
+  if (t.includes("printer")) return "🖨️";
+  if (t.includes("switch") || t.includes("router") || t.includes("firewall")) return "🔀";
+  if (t.includes("server")) return "🖥️";
+  return "💻";
+}
+
+function ensureDeviceModal() {
+  let ov = document.getElementById("dm-overlay");
+  if (ov) return ov;
+  ov = document.createElement("div");
+  ov.id = "dm-overlay"; ov.className = "dm-overlay";
+  ov.innerHTML = `
+    <div class="dm-modal" role="dialog" aria-modal="true">
+      <div class="dm-head">
+        <div>
+          <div class="dm-title"><span id="dm-icon"></span> <span id="dm-name"></span> <span class="dm-scope" id="dm-scope"></span></div>
+          <div class="dm-sub" id="dm-sub"></div>
+        </div>
+        <button class="dm-close" id="dm-close" title="Close">✕</button>
+      </div>
+      <div class="dm-toolbar">
+        <select id="dm-range">${DM_RANGES.map(r => `<option value="${r[0]}">${r[1]}</option>`).join("")}</select>
+        <button id="dm-details-btn">🗄 Device details</button>
+        <button id="dm-export">⬇ Export Excel</button>
+        <span class="dm-count" id="dm-count"></span>
+      </div>
+      <div class="dm-details" id="dm-details" style="display:none;"></div>
+      <div class="dm-stats">
+        <div class="dm-stat"><span>Period</span><b id="dm-period">-</b></div>
+        <div class="dm-stat"><span>Times DOWN</span><b class="red" id="dm-down">0</b></div>
+        <div class="dm-stat"><span>Times UP</span><b id="dm-up">0</b></div>
+        <div class="dm-stat"><span>Total downtime</span><b class="red" id="dm-total">0s</b></div>
+        <div class="dm-stat"><span>Longest</span><b id="dm-longest">0s</b></div>
+        <div class="dm-stat"><span>Availability</span><b id="dm-avail">-</b></div>
+      </div>
+      <div class="dm-table-wrap">
+        <table class="dm-table">
+          <thead><tr><th style="width:56px">#</th><th>Down from</th><th>Back up at</th><th style="width:150px">Duration</th></tr></thead>
+          <tbody id="dm-tbody"></tbody>
+        </table>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener("click", (e) => { if (e.target === ov) closeDeviceModal(); });
+  ov.querySelector("#dm-close").addEventListener("click", closeDeviceModal);
+  ov.querySelector("#dm-range").addEventListener("change", (e) => { DM.range = e.target.value; renderDeviceModal(); });
+  ov.querySelector("#dm-details-btn").addEventListener("click", () => {
+    const el = document.getElementById("dm-details");
+    el.style.display = el.style.display === "none" ? "" : "none";
+  });
+  ov.querySelector("#dm-export").addEventListener("click", exportDeviceModal);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDeviceModal(); });
+  return ov;
+}
+function closeDeviceModal() {
+  const ov = document.getElementById("dm-overlay");
+  if (ov) ov.classList.remove("open");
+  document.body.style.overflow = "";
+}
+function openDeviceModal(device, range) {
+  const ov = ensureDeviceModal();
+  DM.device = (device || "").trim();
+  DM.range = range || "all";
+  ov.querySelector("#dm-range").value = DM.range;
+  document.getElementById("dm-details").style.display = "none";
+  ov.classList.add("open");
+  document.body.style.overflow = "hidden";
+  renderDeviceModal();
+}
+function renderDeviceModal() {
+  const name = DM.device;
+  const all = INCIDENTS.filter(i => (i.device || "").trim() === name);
+  const [fromStr, toStr] = quickRangeDates(DM.range);
+  const list = all.filter(i => {
+    const day = incDay(i);
+    if (fromStr && (!day || day < fromStr)) return false;
+    if (toStr && (!day || day > toStr)) return false;
+    return true;
+  }).sort((a, b) => (b.downFrom || "").localeCompare(a.downFrom || ""));
+  DM.rows = list;
+
+  const devObj = DEVICES.find(x => (x.name || "").trim() === name);
+  const meta = all[0] || {};
+  const ip = (devObj && devObj.ip) || meta.ip || "";
+  const type = (devObj && devObj.type) || meta.type || "";
+  const loc = (devObj && devObj.location) || meta.location || "";
+  const scope = (DM_RANGES.find(r => r[0] === DM.range) || [])[1] || "";
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  set("dm-icon", deviceIcon(type));
+  set("dm-name", name);
+  set("dm-scope", "— " + (DM.range === "all" ? "all incidents" : scope.toLowerCase()));
+  set("dm-sub", [ip, type].filter(Boolean).join(" · "));
+  set("dm-count", list.length + " incident" + (list.length === 1 ? "" : "s"));
+
+  // stats
+  const downs = list.length;
+  const ups = list.filter(i => (i.state || "").toLowerCase() !== "ongoing").length;
+  const secs = list.map(incSeconds);
+  const total = secs.reduce((a, b) => a + b, 0);
+  const longest = secs.reduce((a, b) => Math.max(a, b), 0);
+  const days = list.map(incDay).filter(Boolean).sort();
+  const todayStr = localDateStr(new Date());
+  const pFrom = fromStr || days[0] || "";
+  const pTo = toStr || todayStr;
+  let avail = "100.00%";
+  if (pFrom) {
+    const startMs = new Date(pFrom + "T00:00:00").getTime();
+    const endMs = Math.min(new Date(pTo + "T23:59:59").getTime(), Date.now());
+    const periodSec = Math.max(60, (endMs - startMs) / 1000);
+    avail = Math.max(0, Math.min(100, 100 - (total / periodSec) * 100)).toFixed(2) + "%";
   }
-  const g = DR_ROWS[parseInt(tr.dataset.idx, 10)];
-  if (!g) return;
-  const rows = g.incidents.slice().sort((a, b) => (b.downFrom || "").localeCompare(a.downFrom || "")).map((i, n) => `
-    <tr>
+  set("dm-period", pFrom ? (pFrom + " → " + pTo) : "-");
+  set("dm-down", downs);
+  set("dm-up", ups);
+  set("dm-total", fmtDur(total));
+  set("dm-longest", fmtDur(longest));
+  set("dm-avail", avail);
+
+  // table
+  const tb = document.getElementById("dm-tbody");
+  tb.innerHTML = "";
+  if (!list.length) {
+    tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:18px;">No incidents in this period.</td></tr>';
+  }
+  list.forEach((i, n) => {
+    const ongoing = (i.state || "").toLowerCase() === "ongoing";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
       <td>${n + 1}</td>
       <td>${escapeHtml(i.downFrom)}</td>
-      <td>${escapeHtml(i.backUp || "-")}</td>
-      <td>${escapeHtml(i.duration)}</td>
-      <td><span class="badge ${(i.state || "").toLowerCase() === "ongoing" ? "down" : "ok"}">${escapeHtml(i.state)}</span></td>
-    </tr>`).join("");
-  const d = document.createElement("tr");
-  d.className = "dr-detail";
-  d.innerHTML = `<td colspan="12">
-    <b>${escapeHtml(g.device)}</b> &middot; Total incidents: ${g.incidents.length}
-    <table style="margin-top:6px;"><thead><tr><th>#</th><th>Down from</th><th>Back up at</th><th>Duration</th><th>State</th></tr></thead><tbody>${rows}</tbody></table>
-  </td>`;
-  tr.after(d);
-  tr.classList.add("open");
+      <td>${ongoing ? '<span class="badge down">still down</span>' : escapeHtml(i.backUp || "-")}</td>
+      <td class="dm-dur">${escapeHtml(fmtDur(secs[n]))}${ongoing ? " …" : ""}</td>`;
+    tb.appendChild(tr);
+  });
+
+  // device details panel
+  const det = [
+    ["Device", name], ["IP address", ip], ["Type", type], ["Location", loc],
+    ["Status now", devObj ? devObj.status : ""], ["Response", devObj ? devObj.response : ""],
+    ["Status since", devObj ? devObj.statusSince : ""], ["Last checked", devObj ? devObj.lastChecked : ""],
+    ["Uptime", devObj ? devObj.uptime : ""]
+  ].filter(x => x[1]);
+  document.getElementById("dm-details").innerHTML = det.map(x => `<div><span>${escapeHtml(x[0])}</span><b>${escapeHtml(x[1])}</b></div>`).join("");
+}
+function exportDeviceModal() {
+  const rows = DM.rows.map((i, n) => [n + 1, i.device, i.ip, i.type, i.location, i.downFrom, i.backUp || "", fmtDur(incSeconds(i)), i.state]);
+  exportTable("downtime-" + DM.device.replace(/[^\w.-]+/g, "_") + "-" + localDateStr(new Date()),
+    ["#", "Device", "IP", "Type", "Location", "Down from", "Back up at", "Duration", "State"], rows);
+}
+
+/* ---------- Excel export (SheetJS loaded on demand, CSV fallback) ---------- */
+function loadXLSX() {
+  return new Promise((res, rej) => {
+    if (window.XLSX) return res(window.XLSX);
+    const sc = document.createElement("script");
+    sc.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+    sc.onload = () => window.XLSX ? res(window.XLSX) : rej(new Error("xlsx missing"));
+    sc.onerror = rej;
+    document.head.appendChild(sc);
+  });
+}
+async function exportTable(filename, headers, rows) {
+  try {
+    const X = await loadXLSX();
+    const ws = X.utils.aoa_to_sheet([headers].concat(rows));
+    const wb = X.utils.book_new();
+    X.utils.book_append_sheet(wb, ws, "Report");
+    X.writeFile(wb, filename + ".xlsx");
+  } catch (e) {
+    const esc = (v) => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
+    const csv = "\ufeff" + [headers].concat(rows).map(r => r.map(esc).join(",")).join("\r\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    a.download = filename + ".csv";
+    document.body.appendChild(a); a.click(); a.remove();
+  }
 }
 
 function renderDowntimeReportTable() {
@@ -1287,6 +1480,9 @@ function renderDowntimeReportTable() {
     incTbody.innerHTML = "";
     filteredInc.slice(0, 500).forEach(i => {
       const tr = document.createElement("tr");
+      tr.className = "dr-row-link";
+      tr.dataset.device = i.device;
+      tr.title = "Click to see all incidents of this device";
       tr.innerHTML = `
         <td>${escapeHtml(i.device)}</td>
         <td>${escapeHtml(i.ip)}</td>
@@ -1313,34 +1509,81 @@ function formatDowntime(mins) {
   return s.trim();
 }
 
+/* ---------- Log report ---------- */
+let LOG_ROWS = [];
+function logEventType(a) {
+  const k = (a.kind || "").toLowerCase();
+  const m = (a.message || "");
+  if (/down/.test(k)) return "DOWN";
+  if (/(^|[^a-z])up([^a-z]|$)/.test(k)) return "UP";
+  const mm = /\bis\s+(up|down)\b/i.exec(m);
+  if (mm) return mm[1].toUpperCase();
+  if (/\bdown\b/i.test(m) && !/\bup\b/i.test(m)) return "DOWN";
+  if (/\bup\b/i.test(m) && !/\bdown\b/i.test(m)) return "UP";
+  return "ADMIN";
+}
+function logDay(a) {
+  const m = /(\d{4})-(\d{1,2})-(\d{1,2})/.exec(a.time || "");
+  return m ? m[1] + "-" + m[2].padStart(2, "0") + "-" + m[3].padStart(2, "0") : "";
+}
 function renderActivityTable() {
   const tbody = document.querySelector("#activity-table tbody");
   if (!tbody) return;
-  const q = (document.getElementById("log-search")?.value || "").toLowerCase();
-  const kd = (document.getElementById("log-kind")?.value || "").toLowerCase();
-  const mo = (document.getElementById("log-month")?.value || "");
+  const val = (id) => (document.getElementById(id)?.value || "");
+  const q = val("log-search").toLowerCase().trim();
+  const ev = val("log-event");
+  const dt = val("log-devtype").toLowerCase();
+  const dev = val("log-device").trim().toLowerCase();
+  const from = val("log-from"), to = val("log-to");
+  const typeOf = {};
+  DEVICES.forEach(d => { typeOf[(d.name || "").trim().toLowerCase()] = d.type; });
+  INCIDENTS.forEach(i => { const k = (i.device || "").trim().toLowerCase(); if (!typeOf[k]) typeOf[k] = i.type; });
+
+  const list = ACTIVITY_LOG.map(a => ({ a, ev: logEventType(a), type: typeOf[(a.device || "").trim().toLowerCase()] || "", day: logDay(a) }))
+    .filter(x => {
+      if (q && !((x.a.device + " " + x.a.message).toLowerCase().includes(q))) return false;
+      if (ev && x.ev !== ev) return false;
+      if (dt && (x.type || "").toLowerCase() !== dt) return false;
+      if (dev && (x.a.device || "").trim().toLowerCase() !== dev) return false;
+      if (from && (!x.day || x.day < from)) return false;
+      if (to && (!x.day || x.day > to)) return false;
+      return true;
+    })
+    .sort((p, q2) => (q2.a.time || "").localeCompare(p.a.time || ""));
+  LOG_ROWS = list;
+
+  const cnt = (k) => list.filter(x => x.ev === k).length;
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  set("log-period", (from || to) ? ((from || "start") + " → " + (to || localDateStr(new Date()))) : "All history");
+  set("log-total", list.length);
+  set("log-down", cnt("DOWN"));
+  set("log-up", cnt("UP"));
+  set("log-admin", cnt("ADMIN"));
+
+  const MAX = 1000;
   tbody.innerHTML = "";
-  ACTIVITY_LOG.filter(a => {
-    if (q) {
-      const hay = (a.device + " " + a.message).toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
-    if (kd && a.kind.toLowerCase() !== kd) return false;
-    if (mo) {
-      const mm = (a.time || "").slice(0,7);
-      if (mm !== mo) return false;
-    }
-    return true;
-  }).forEach(a => {
+  list.slice(0, MAX).forEach((x, n) => {
     const tr = document.createElement("tr");
+    const cls = x.ev === "UP" ? "ev-up" : x.ev === "DOWN" ? "ev-down" : "ev-admin";
+    const label = x.ev === "ADMIN" ? "ADMIN" : x.ev;
     tr.innerHTML = `
-      <td>${escapeHtml(a.time)}</td>
-      <td>${escapeHtml(a.device)}</td>
-      <td>${escapeHtml(a.message)}</td>
-      <td>${escapeHtml(a.kind)}</td>
-    `;
+      <td>${n + 1}</td>
+      <td>${escapeHtml(x.a.time)}</td>
+      <td><span class="ev-badge ${cls}">${label}</span></td>
+      <td><b>${escapeHtml(x.a.device)}</b></td>
+      <td>${escapeHtml(x.type)}</td>
+      <td>${escapeHtml(x.a.message)}</td>`;
     tbody.appendChild(tr);
   });
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:14px;">No log events found for the selected filters / date range.</td></tr>';
+  }
+  const st = document.getElementById("log-status-msg");
+  if (st) st.textContent = list.length > MAX ? ("Showing latest " + MAX + " of " + list.length + " — narrow the date range or Export Excel for all") : "";
+}
+function exportLogReport() {
+  const rows = LOG_ROWS.map((x, n) => [n + 1, x.a.time, x.ev === "ADMIN" ? "ADMIN" : x.ev, x.a.device, x.type, x.a.message]);
+  exportTable("log-report-" + localDateStr(new Date()), ["#", "Date & time", "Event", "Device", "Type", "Message"], rows);
 }
 
 function renderUsersTable() {
@@ -1598,7 +1841,6 @@ async function loadData() {
 
     populateMonthSelect("m-month", MAINTENANCE.map(x => x.date));
     populateMonthSelect("dr-month", DOWNTIME_REPORT.map(x => x.firstDown));
-    populateMonthSelect("log-month", ACTIVITY_LOG.map(x => x.time));
     populateMonthSelect("u-month", USERS.map(x => x.created));
     populateMonthSelect("pu-month", PENDING_USERS.map(x => x.requested));
     populateMonthSelect("emp-month", EMPLOYEES.map(x => x.created));
@@ -1640,11 +1882,19 @@ async function loadData() {
         while (drDev.options.length > 1) drDev.remove(1);
         vals.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; drDev.appendChild(o); });
       }
-      const logKind = document.getElementById("log-kind");
-      if (logKind) {
-        const vals = [...new Set(ACTIVITY_LOG.map(a => a.kind).filter(Boolean))].sort();
-        while (logKind.options.length > 1) logKind.remove(1);
-        vals.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; logKind.appendChild(o); });
+      const logDevType = document.getElementById("log-devtype");
+      if (logDevType) {
+        const vals = [...new Set(DEVICES.map(d => d.type).filter(Boolean).concat(INCIDENTS.map(i => i.type).filter(Boolean)))].sort();
+        while (logDevType.options.length > 1) logDevType.remove(1);
+        vals.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; logDevType.appendChild(o); });
+      }
+      const logDevice = document.getElementById("log-device");
+      if (logDevice) {
+        const keep = logDevice.value;
+        const vals = [...new Set(DEVICES.map(d => (d.name || "").trim()).concat(ACTIVITY_LOG.map(a => (a.device || "").trim())).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+        while (logDevice.options.length > 1) logDevice.remove(1);
+        vals.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; logDevice.appendChild(o); });
+        logDevice.value = keep;
       }
       const uRole = document.getElementById("u-role");
       if (uRole) {
@@ -1923,7 +2173,6 @@ document.addEventListener("DOMContentLoaded", () => {
   bindAuto(["i-search","i-category","i-warehouse","i-month"], applyItemsFilters);
   bindAuto(["dev-search","dev-status","dev-type","dev-sort"], renderDevicesTable);
   bindAuto(["m-search","m-status","m-type","m-month"], renderMaintenanceTable);
-  bindAuto(["log-search","log-kind","log-month"], renderActivityTable);
   bindAuto(["u-search","u-role","u-month"], renderUsersTable);
   bindAuto(["pu-search","pu-status","pu-month"], renderPendingUsersTable);
   bindAuto(["emp-search","emp-role","emp-month"], renderEmployeesTable);
@@ -1974,7 +2223,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const drBody = document.querySelector("#downtime-report-table tbody");
   if (drBody) drBody.addEventListener("click", (e) => {
     const tr = e.target.closest("tr.dr-row");
-    if (tr) toggleDrDetail(tr);
+    if (!tr) return;
+    const g = DR_ROWS[parseInt(tr.dataset.idx, 10)];
+    if (g) openDeviceModal(g.device);
+  });
+  const drIncBody = document.querySelector("#dr-incidents-table tbody");
+  if (drIncBody) drIncBody.addEventListener("click", (e) => {
+    const tr = e.target.closest("tr.dr-row-link");
+    if (tr) openDeviceModal(tr.dataset.device);
   });
   // Date inputs: clicking anywhere in the box opens the calendar
   document.querySelectorAll('input[type="date"]').forEach(inp => {
@@ -1983,7 +2239,27 @@ document.addEventListener("DOMContentLoaded", () => {
     inp.addEventListener("focus", open);
   });
   const resetLog = document.getElementById("reset-log");
-  if (resetLog) resetLog.addEventListener("click", () => { document.getElementById("log-search").value=""; document.getElementById("log-kind").value=""; document.getElementById("log-month").value=""; renderActivityTable(); });
+  if (resetLog) resetLog.addEventListener("click", () => {
+    ["log-search", "log-event", "log-devtype", "log-device", "log-from", "log-to"].forEach(id => { const e = document.getElementById(id); if (e) e.value = ""; });
+    renderActivityTable();
+  });
+  // Log report: default = last 7 days, quick ranges, auto-apply, export
+  (function () {
+    const [f7, t7] = quickRangeDates("7");
+    const fe = document.getElementById("log-from"), te = document.getElementById("log-to");
+    if (fe && !fe.value) fe.value = f7;
+    if (te && !te.value) te.value = t7;
+    document.querySelectorAll(".log-quick-btn").forEach(btn => btn.addEventListener("click", () => {
+      const [f, t] = quickRangeDates(btn.dataset.range);
+      fe.value = f; te.value = t;
+      renderActivityTable();
+    }));
+    const showLog = document.getElementById("log-show");
+    if (showLog) showLog.addEventListener("click", renderActivityTable);
+    const exLog = document.getElementById("log-export");
+    if (exLog) exLog.addEventListener("click", exportLogReport);
+    bindAuto(["log-search", "log-event", "log-devtype", "log-device", "log-from", "log-to"], renderActivityTable);
+  })();
   const resetUser = document.getElementById("reset-user");
   if (resetUser) resetUser.addEventListener("click", () => { document.getElementById("u-search").value=""; document.getElementById("u-role").value=""; document.getElementById("u-month").value=""; renderUsersTable(); });
   const resetPu = document.getElementById("reset-pu");
@@ -1992,3 +2268,19 @@ document.addEventListener("DOMContentLoaded", () => {
   if (resetEmp) resetEmp.addEventListener("click", () => { document.getElementById("emp-search").value=""; document.getElementById("emp-role").value=""; document.getElementById("emp-month").value=""; renderEmployeesTable(); });
 });
 
+
+
+/* Keep sidebar/sticky offsets in sync with the fixed top header height */
+(function () {
+  const sync = () => {
+    const h = document.querySelector("header.top");
+    if (h) document.documentElement.style.setProperty("--header-h", h.offsetHeight + "px");
+  };
+  window.addEventListener("load", sync);
+  window.addEventListener("resize", sync);
+  document.addEventListener("DOMContentLoaded", () => {
+    sync();
+    const h = document.querySelector("header.top");
+    if (h && window.ResizeObserver) new ResizeObserver(sync).observe(h);
+  });
+})();

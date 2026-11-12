@@ -340,23 +340,43 @@
         </section>
 
         <section class="section" data-page="log-report">
-          <h2>Log Report</h2>
+          <h2>📜 Log report <span style="font-weight:400;color:var(--muted);font-size:.85rem;">(every event / notification)</span></h2>
           <div class="card">
             <div class="filter-grid">
-              <label>Search <input type="text" id="log-search" placeholder="Device/Message"></label>
-              <label>Kind <select id="log-kind"><option value="">All</option></select></label>
-              <label>Month <select id="log-month"><option value="">All</option></select></label>
+              <label>Search device / message <input type="text" id="log-search" placeholder="Type to search…"></label>
+              <label>Event type <select id="log-event"><option value="">All events</option><option value="DOWN">DOWN</option><option value="UP">UP</option><option value="ADMIN">Admin actions</option></select></label>
+              <label>Device type <select id="log-devtype"><option value="">All types</option></select></label>
+              <label>Device <select id="log-device"><option value="">All devices</option></select></label>
+              <label>From <input type="date" id="log-from"></label>
+              <label>To <input type="date" id="log-to"></label>
+              <div class="log-actions">
+                <button id="log-show" class="primary">Show log</button>
+                <button id="log-export">⬇ Export Excel</button>
+                <button id="reset-log">↺ Reset</button>
+              </div>
             </div>
             <div class="filter-actions">
-              <button id="reset-log" class="primary">Reset</button>
+              <button class="log-quick-btn" data-range="today">Today</button>
+              <button class="log-quick-btn" data-range="yesterday">Yesterday</button>
+              <button class="log-quick-btn" data-range="7">Last 7 days</button>
+              <button class="log-quick-btn" data-range="14">Last 14 days</button>
+              <button class="log-quick-btn" data-range="30">Last 30 days</button>
+              <button class="log-quick-btn" data-range="month">This month</button>
               <span id="log-status-msg" class="loading"></span>
             </div>
+          </div>
+          <div class="grid kpi-grid">
+            <div class="card kpi"><span class="label">Period</span><span class="value" id="log-period" style="font-size:1.05rem;">-</span></div>
+            <div class="card kpi"><span class="label">Total events</span><span class="value" id="log-total">0</span></div>
+            <div class="card kpi accent-danger"><span class="label">Device DOWN</span><span class="value" id="log-down">0</span></div>
+            <div class="card kpi accent-success"><span class="label">Device UP</span><span class="value" id="log-up">0</span></div>
+            <div class="card kpi accent-purple"><span class="label">Admin actions</span><span class="value" id="log-admin">0</span></div>
           </div>
           <div class="card">
             <div class="table-wrap">
               <table id="activity-table">
                 <thead><tr>
-                  <th>Time</th><th>Device</th><th>Message</th><th>Kind</th>
+                  <th>#</th><th>Date &amp; time</th><th>Event</th><th>Device</th><th>Type</th><th>Message</th>
                 </tr></thead>
                 <tbody></tbody>
               </table>
