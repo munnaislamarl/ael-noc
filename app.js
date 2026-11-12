@@ -129,6 +129,13 @@ let DEVICE_DOWNTIME = [];
 let CONSUMPTION = [];
 let ASSETS = [];
 let ITEMS = [];
+let MAINTENANCE = [];
+let USERS = [];
+let PENDING_USERS = [];
+let EMPLOYEES = [];
+let DEVICES = [];
+let DOWNTIME_REPORT = [];
+let ACTIVITY_LOG = [];
 let incidentFilters = { from: "", to: "", device: "", type: "", state: "", location: "", month: "" };
 let incidentPage = 1;
 let consumptionFilters = { from: "", to: "", item: "", warehouse: "", mill: "", month: "" };
@@ -258,13 +265,16 @@ function renderAll(d) {
   DATA = d;
   renderKPIs(d);
   renderCharts(d);
-  renderIncidentKPIs(getFilteredIncidents());
-  renderIncidentsTable();
-  renderDateIncidents();
-  renderDeviceDowntime();
   renderConsumptionTable();
   renderAssetsTable();
   renderItemsTable();
+  renderMaintenanceTable();
+  renderDevicesTable();
+  renderDowntimeReportTable();
+  renderActivityTable();
+  renderUsersTable();
+  renderPendingUsersTable();
+  renderEmployeesTable();
   const badge = document.getElementById("status-badge");
   badge.textContent = "Live data";
   badge.className = "badge ok";
@@ -439,6 +449,163 @@ function parseItems(rows) {
       warehouse: (r[8] || "").trim(),
       remark: (r[9] || "").trim(),
       created: (r[10] || "").trim()
+    });
+  }
+  return out;
+}
+
+function parseMaintenance(rows) {
+  const out = [];
+  if (!rows || rows.length < 2) return out;
+  let start = 0;
+  if (rows[0] && /no|report/i.test(rows[0][0] + rows[0][1])) start = 1;
+  for (let i = start; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.length === 0) continue;
+    if (!(r[0] || r[1] || r[2])) continue;
+    out.push({
+      no: (r[0] || "").trim(),
+      reportId: (r[1] || "").trim(),
+      date: (r[2] || "").trim(),
+      device: (r[3] || "").trim(),
+      location: (r[4] || "").trim(),
+      maintenanceType: (r[5] || "").trim(),
+      workType: (r[6] || "").trim(),
+      problem: (r[7] || "").trim(),
+      action: (r[8] || "").trim(),
+      networkTest: (r[9] || "").trim(),
+      status: (r[10] || "").trim()
+    });
+  }
+  return out;
+}
+
+function parseUsers(rows) {
+  const out = [];
+  if (!rows || rows.length < 2) return out;
+  let start = 0;
+  if (rows[0] && /no|full name/i.test(rows[0][0] + rows[0][1])) start = 1;
+  for (let i = start; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.length === 0) continue;
+    if (!(r[1] || r[2])) continue;
+    out.push({
+      no: (r[0] || "").trim(),
+      fullName: (r[1] || "").trim(),
+      username: (r[2] || "").trim(),
+      employeeId: (r[3] || "").trim(),
+      designation: (r[4] || "").trim(),
+      department: (r[5] || "").trim(),
+      location: (r[6] || "").trim(),
+      email: (r[7] || "").trim(),
+      phone: (r[8] || "").trim(),
+      role: (r[9] || "").trim(),
+      account: (r[10] || "").trim(),
+      created: (r[11] || "").trim()
+    });
+  }
+  return out;
+}
+
+function parsePendingUsers(rows) {
+  const out = [];
+  if (!rows || rows.length < 2) return out;
+  let start = 0;
+  if (rows[0] && /id|requested/i.test(rows[0][0] + rows[0][1])) start = 1;
+  for (let i = start; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.length === 0) continue;
+    if (!(r[2] || r[3])) continue;
+    out.push({
+      id: (r[0] || "").trim(),
+      requested: (r[1] || "").trim(),
+      fullName: (r[2] || "").trim(),
+      username: (r[3] || "").trim(),
+      email: (r[4] || "").trim(),
+      phone: (r[5] || "").trim(),
+      department: (r[6] || "").trim(),
+      designation: (r[7] || "").trim(),
+      employeeId: (r[8] || "").trim(),
+      location: (r[9] || "").trim(),
+      wantsRole: (r[10] || "").trim(),
+      reason: (r[11] || "").trim(),
+      status: (r[12] || "").trim()
+    });
+  }
+  return out;
+}
+
+function parseEmployees(rows) {
+  // same as users
+  return parseUsers(rows);
+}
+
+function parseDevices(rows) {
+  const out = [];
+  if (!rows || rows.length < 2) return out;
+  let start = 0;
+  if (rows[0] && /no|name/i.test(rows[0][0] + rows[0][1])) start = 1;
+  for (let i = start; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.length === 0) continue;
+    if (!(r[1])) continue;
+    out.push({
+      no: (r[0] || "").trim(),
+      name: (r[1] || "").trim(),
+      ip: (r[2] || "").trim(),
+      type: (r[3] || "").trim(),
+      location: (r[4] || "").trim(),
+      status: (r[5] || "").trim(),
+      response: (r[6] || "").trim(),
+      statusSince: (r[7] || "").trim(),
+      lastChecked: (r[8] || "").trim(),
+      uptime: (r[9] || "").trim()
+    });
+  }
+  return out;
+}
+
+function parseDowntimeReport(rows) {
+  const out = [];
+  if (!rows || rows.length < 2) return out;
+  let start = 0;
+  if (rows[0] && /no|device/i.test(rows[0][0] + rows[0][1])) start = 1;
+  for (let i = start; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.length === 0) continue;
+    if (!(r[1])) continue;
+    out.push({
+      no: (r[0] || "").trim(),
+      device: (r[1] || "").trim(),
+      ip: (r[2] || "").trim(),
+      type: (r[3] || "").trim(),
+      location: (r[4] || "").trim(),
+      downTimes: (r[5] || "").trim(),
+      upTimes: (r[6] || "").trim(),
+      totalDowntime: (r[7] || "").trim(),
+      minutes: (r[8] || "").trim(),
+      longest: (r[9] || "").trim(),
+      availability: (r[10] || "").trim(),
+      now: (r[11] || "").trim()
+    });
+  }
+  return out;
+}
+
+function parseActivityLog(rows) {
+  const out = [];
+  if (!rows || rows.length < 2) return out;
+  let start = 0;
+  if (rows[0] && /time|device/i.test(rows[0][0] + rows[0][1])) start = 1;
+  for (let i = start; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.length === 0) continue;
+    if (!(r[0] || r[1])) continue;
+    out.push({
+      time: (r[0] || "").trim(),
+      device: (r[1] || "").trim(),
+      message: (r[2] || "").trim(),
+      kind: (r[3] || "").trim()
     });
   }
   return out;
@@ -824,6 +991,171 @@ function renderItemsTable() {
   renderGenericPagination("items-pagination", list.length, itemsPage, (p) => { itemsPage = p; renderItemsTable(); });
 }
 
+function renderMaintenanceTable() {
+  const tbody = document.querySelector("#maintenance-table tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  MAINTENANCE.forEach(m => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(m.no)}</td>
+      <td>${escapeHtml(m.reportId)}</td>
+      <td>${escapeHtml(m.date)}</td>
+      <td>${escapeHtml(m.device)}</td>
+      <td>${escapeHtml(m.location)}</td>
+      <td>${escapeHtml(m.maintenanceType)}</td>
+      <td>${escapeHtml(m.workType)}</td>
+      <td>${escapeHtml(m.problem)}</td>
+      <td>${escapeHtml(m.action)}</td>
+      <td>${escapeHtml(m.networkTest)}</td>
+      <td><span class="badge ${/complete|pass/i.test(m.status) ? "ok" : "down"}">${escapeHtml(m.status)}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderDevicesTable() {
+  const tbody = document.querySelector("#devices-table tbody");
+  if (!tbody) return;
+  const q = (document.getElementById("dev-search")?.value || "").toLowerCase();
+  const st = (document.getElementById("dev-status")?.value || "").toLowerCase();
+  tbody.innerHTML = "";
+  DEVICES.filter(d => {
+    if (q) {
+      const hay = (d.name + " " + d.ip + " " + d.type + " " + d.location).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (st && d.status.toLowerCase() !== st) return false;
+    return true;
+  }).forEach(d => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(d.no)}</td>
+      <td>${escapeHtml(d.name)}</td>
+      <td>${escapeHtml(d.ip)}</td>
+      <td>${escapeHtml(d.type)}</td>
+      <td>${escapeHtml(d.location)}</td>
+      <td><span class="badge ${d.status.toLowerCase() === "up" ? "ok" : "down"}">${escapeHtml(d.status)}</span></td>
+      <td>${escapeHtml(d.response)}</td>
+      <td>${escapeHtml(d.uptime)}</td>
+      <td>${escapeHtml(d.lastChecked)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderDowntimeReportTable() {
+  const tbody = document.querySelector("#downtime-report-table tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  DOWNTIME_REPORT.forEach(d => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(d.no)}</td>
+      <td>${escapeHtml(d.device)}</td>
+      <td>${escapeHtml(d.ip)}</td>
+      <td>${escapeHtml(d.type)}</td>
+      <td>${escapeHtml(d.location)}</td>
+      <td>${escapeHtml(d.downTimes)}</td>
+      <td>${escapeHtml(d.upTimes)}</td>
+      <td>${escapeHtml(d.totalDowntime)}</td>
+      <td>${escapeHtml(d.minutes)}</td>
+      <td>${escapeHtml(d.longest)}</td>
+      <td>${escapeHtml(d.availability)}</td>
+      <td><span class="badge ${d.now.toLowerCase() === "up" ? "ok" : "down"}">${escapeHtml(d.now)}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderActivityTable() {
+  const tbody = document.querySelector("#activity-table tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  ACTIVITY_LOG.forEach(a => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(a.time)}</td>
+      <td>${escapeHtml(a.device)}</td>
+      <td>${escapeHtml(a.message)}</td>
+      <td>${escapeHtml(a.kind)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderUsersTable() {
+  const tbody = document.querySelector("#users-table tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  USERS.forEach(u => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(u.no)}</td>
+      <td>${escapeHtml(u.fullName)}</td>
+      <td>${escapeHtml(u.username)}</td>
+      <td>${escapeHtml(u.employeeId)}</td>
+      <td>${escapeHtml(u.designation)}</td>
+      <td>${escapeHtml(u.department)}</td>
+      <td>${escapeHtml(u.location)}</td>
+      <td>${escapeHtml(u.email)}</td>
+      <td>${escapeHtml(u.phone)}</td>
+      <td>${escapeHtml(u.role)}</td>
+      <td>${escapeHtml(u.account)}</td>
+      <td>${escapeHtml(u.created)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderPendingUsersTable() {
+  const tbody = document.querySelector("#pending-users-table tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  PENDING_USERS.forEach(u => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(u.id)}</td>
+      <td>${escapeHtml(u.requested)}</td>
+      <td>${escapeHtml(u.fullName)}</td>
+      <td>${escapeHtml(u.username)}</td>
+      <td>${escapeHtml(u.email)}</td>
+      <td>${escapeHtml(u.phone)}</td>
+      <td>${escapeHtml(u.department)}</td>
+      <td>${escapeHtml(u.designation)}</td>
+      <td>${escapeHtml(u.employeeId)}</td>
+      <td>${escapeHtml(u.location)}</td>
+      <td>${escapeHtml(u.wantsRole)}</td>
+      <td>${escapeHtml(u.reason)}</td>
+      <td><span class="badge ${u.status.toLowerCase() === "approved" ? "ok" : (u.status.toLowerCase() === "rejected" ? "down" : "ok")}">${escapeHtml(u.status)}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderEmployeesTable() {
+  const tbody = document.querySelector("#employees-table tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  EMPLOYEES.forEach(u => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(u.no)}</td>
+      <td>${escapeHtml(u.fullName)}</td>
+      <td>${escapeHtml(u.username)}</td>
+      <td>${escapeHtml(u.employeeId)}</td>
+      <td>${escapeHtml(u.designation)}</td>
+      <td>${escapeHtml(u.department)}</td>
+      <td>${escapeHtml(u.location)}</td>
+      <td>${escapeHtml(u.email)}</td>
+      <td>${escapeHtml(u.phone)}</td>
+      <td>${escapeHtml(u.role)}</td>
+      <td>${escapeHtml(u.account)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
 function renderGenericPagination(containerId, total, currentPage, onPageChange) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
@@ -935,33 +1267,50 @@ async function loadData() {
         const res = await fetch("https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/export?format=csv&gid=278364623", { cache: "no-store" });
         if (!res.ok) throw new Error("HTTP " + res.status + " for Item List");
         return parseCSV(await res.text());
-      })()
+      })(),
+      fetchSheet("IT Maintenance"),
+      fetchSheet("Downtime Report"),
+      fetchSheet("Activity Log"),
+      fetchSheet("Devices"),
+      fetchSheet("Users / Employees"),
+      fetchSheet("Access Requests")
     ]);
     if (results[0].status === "fulfilled") INCIDENTS = parseIncidents(results[0].value);
     if (results[1].status === "fulfilled") DATE_INCIDENTS = parseDateIncidents(results[1].value);
     if (results[2].status === "fulfilled") DEVICE_DOWNTIME = parseDeviceDowntime(results[2].value);
     if (results[3].status === "fulfilled") CONSUMPTION = parseConsumption(results[3].value);
-    else console.warn("consumption fetch failed", results[3].reason);
     if (results[4].status === "fulfilled") ASSETS = parseAssets(results[4].value);
-    else console.warn("assets fetch failed", results[4].reason);
     if (results[5].status === "fulfilled") ITEMS = parseItems(results[5].value);
-    else console.warn("items fetch failed", results[5].reason);
+    if (results[6].status === "fulfilled") MAINTENANCE = parseMaintenance(results[6].value);
+    if (results[7].status === "fulfilled") DOWNTIME_REPORT = parseDowntimeReport(results[7].value);
+    if (results[8].status === "fulfilled") ACTIVITY_LOG = parseActivityLog(results[8].value);
+    if (results[9].status === "fulfilled") DEVICES = parseDevices(results[9].value);
+    if (results[10].status === "fulfilled") { USERS = parseUsers(results[10].value); EMPLOYEES = parseEmployees(results[10].value); }
+    if (results[11].status === "fulfilled") PENDING_USERS = parsePendingUsers(results[11].value);
 
 
-    populateTypeFilter();
     populateAssetsFilters();
     populateItemsFilters();
-    populateMonthSelect("f-month", INCIDENTS.map(x => x.downFrom));
     populateMonthSelect("c-month", CONSUMPTION.map(x => x.date));
     populateMonthSelect("a-month", ASSETS.map(x => x.created));
     populateMonthSelect("i-month", ITEMS.map(x => x.created));
-    renderIncidentKPIs(getFilteredIncidents());
-    renderIncidentsTable();
-    renderDateIncidents();
-    renderDeviceDowntime();
     renderConsumptionTable();
     renderAssetsTable();
     renderItemsTable();
+    renderMaintenanceTable();
+    renderDevicesTable();
+    renderDowntimeReportTable();
+    renderActivityTable();
+    renderUsersTable();
+    renderPendingUsersTable();
+    renderEmployeesTable();
+    renderMaintenanceTable();
+    renderDevicesTable();
+    renderDowntimeReportTable();
+    renderActivityTable();
+    renderUsersTable();
+    renderPendingUsersTable();
+    renderEmployeesTable();
 
     document.getElementById("generated-at").textContent = "Generated: " + d.generated;
     status.textContent = "Updated " + new Date().toLocaleTimeString();
@@ -1084,23 +1433,50 @@ function showPage(page) {
   document.querySelectorAll("section.section").forEach(sec => {
     sec.style.display = (sec.dataset.page === page) ? "" : "none";
   });
-  document.querySelectorAll(".nav-item").forEach(btn => {
+  document.querySelectorAll(".nav-item, .nav-subitem").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.page === page);
   });
+  if (page === "downtime-report" || page === "log-report") {
+    const sub = document.getElementById("sub-reports");
+    if (sub) sub.style.display = "block";
+    const arrow = document.querySelector('[data-toggle="reports"] .nav-arrow');
+    if (arrow) arrow.textContent = "▼";
+  }
+  if (page === "user-list" || page === "pending-users" || page === "employee-list") {
+    const sub = document.getElementById("sub-users");
+    if (sub) sub.style.display = "block";
+    const arrow = document.querySelector('[data-toggle="users"] .nav-arrow');
+    if (arrow) arrow.textContent = "▼";
+  }
   try { localStorage.setItem("activePage", page); } catch (e) {}
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   const saved = (function(){ try { return localStorage.getItem("activePage"); } catch(e){ return null; } })();
-  showPage(saved || "overview");
+  showPage(saved || "dashboard");
   document.querySelectorAll(".nav-item").forEach(btn => {
+    if (btn.dataset.page) {
+      btn.addEventListener("click", () => showPage(btn.dataset.page));
+    }
+  });
+  // submenu toggle
+  document.querySelectorAll(".nav-parent").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.toggle;
+      const sub = document.getElementById("sub-" + key);
+      if (sub) {
+        const open = sub.style.display !== "none" && sub.style.display !== "";
+        sub.style.display = open ? "none" : "block";
+        const arrow = btn.querySelector(".nav-arrow");
+        if (arrow) arrow.textContent = open ? "▶" : "▼";
+      }
+    });
+  });
+  document.querySelectorAll(".nav-subitem").forEach(btn => {
     btn.addEventListener("click", () => showPage(btn.dataset.page));
   });
   loadData();
   document.getElementById("refresh-btn").addEventListener("click", loadData);
-
-  document.getElementById("apply-filters").addEventListener("click", applyIncidentFilters);
-  document.getElementById("reset-filters").addEventListener("click", resetIncidentFilters);
 
   // Consumption filters
   document.getElementById("apply-consumption").addEventListener("click", applyConsumptionFilters);
@@ -1131,8 +1507,17 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   };
-  bindAuto(["f-date-from","f-date-to","f-device","f-type","f-state","f-location","f-month"], applyIncidentFilters);
   bindAuto(["c-date-from","c-date-to","c-item","c-warehouse","c-mill","c-month"], applyConsumptionFilters);
   bindAuto(["a-search","a-status","a-category","a-brand","a-plant","a-month"], applyAssetsFilters);
   bindAuto(["i-search","i-category","i-warehouse","i-month"], applyItemsFilters);
+  bindAuto(["dev-search","dev-status"], renderDevicesTable);
+
+  // Settings
+  const saveSet = document.getElementById("save-settings");
+  if (saveSet) {
+    saveSet.addEventListener("click", () => {
+      const st = document.getElementById("settings-status");
+      if (st) { st.textContent = "Saved"; st.className = ""; }
+    });
+  }
 });

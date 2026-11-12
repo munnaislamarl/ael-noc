@@ -29,6 +29,13 @@ body {
 .nav-item.active { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,.4); }
 .nav-item.active:hover { background: #1d4ed8; }
 .nav-icon { font-size: 1.1rem; width: 22px; text-align: center; }
+.nav-group { margin-bottom: 4px; }
+.nav-parent { justify-content: space-between; }
+.nav-arrow { font-size: .7rem; color: #94a3b8; transition: transform .15s; }
+.nav-sub { display: none; padding-left: 12px; margin-bottom: 4px; }
+.nav-subitem { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: none; background: transparent; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: .85rem; color: #cbd5e1; margin-bottom: 2px; transition: all .15s ease; font-weight: 400; }
+.nav-subitem:hover { background: rgba(255,255,255,.08); color: #fff; }
+.nav-subitem.active { background: rgba(37,99,235,.6); color: #fff; }
 .content { flex: 1; min-width: 0; }
 @media (max-width: 900px) {
   .layout { flex-direction: column; }
