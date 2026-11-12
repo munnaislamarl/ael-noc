@@ -994,8 +994,24 @@ function renderItemsTable() {
 function renderMaintenanceTable() {
   const tbody = document.querySelector("#maintenance-table tbody");
   if (!tbody) return;
+  const q = (document.getElementById("m-search")?.value || "").toLowerCase();
+  const st = (document.getElementById("m-status")?.value || "").toLowerCase();
+  const ty = (document.getElementById("m-type")?.value || "").toLowerCase();
+  const mo = (document.getElementById("m-month")?.value || "");
   tbody.innerHTML = "";
-  MAINTENANCE.forEach(m => {
+  MAINTENANCE.filter(m => {
+    if (q) {
+      const hay = (m.device + " " + m.location + " " + m.maintenanceType + " " + m.workType + " " + m.problem).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (st && m.status.toLowerCase() !== st) return false;
+    if (ty && m.maintenanceType.toLowerCase() !== ty) return false;
+    if (mo) {
+      const mm = (m.date || "").slice(0,7);
+      if (mm !== mo) return false;
+    }
+    return true;
+  }).forEach(m => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(m.no)}</td>
@@ -1019,6 +1035,8 @@ function renderDevicesTable() {
   if (!tbody) return;
   const q = (document.getElementById("dev-search")?.value || "").toLowerCase();
   const st = (document.getElementById("dev-status")?.value || "").toLowerCase();
+  const ty = (document.getElementById("dev-type")?.value || "").toLowerCase();
+  const mo = (document.getElementById("dev-month")?.value || "");
   tbody.innerHTML = "";
   DEVICES.filter(d => {
     if (q) {
@@ -1026,6 +1044,11 @@ function renderDevicesTable() {
       if (!hay.includes(q)) return false;
     }
     if (st && d.status.toLowerCase() !== st) return false;
+    if (ty && d.type.toLowerCase() !== ty) return false;
+    if (mo) {
+      const m = (d.lastChecked || "").slice(0,7);
+      if (m !== mo) return false;
+    }
     return true;
   }).forEach(d => {
     const tr = document.createElement("tr");
@@ -1047,8 +1070,24 @@ function renderDevicesTable() {
 function renderDowntimeReportTable() {
   const tbody = document.querySelector("#downtime-report-table tbody");
   if (!tbody) return;
+  const q = (document.getElementById("dr-search")?.value || "").toLowerCase();
+  const st = (document.getElementById("dr-status")?.value || "").toLowerCase();
+  const ty = (document.getElementById("dr-type")?.value || "").toLowerCase();
+  const mo = (document.getElementById("dr-month")?.value || "");
   tbody.innerHTML = "";
-  DOWNTIME_REPORT.forEach(d => {
+  DOWNTIME_REPORT.filter(d => {
+    if (q) {
+      const hay = (d.device + " " + d.type + " " + d.location + " " + d.ip).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (st && d.now.toLowerCase() !== st) return false;
+    if (ty && d.type.toLowerCase() !== ty) return false;
+    if (mo) {
+      const mm = (d.firstDown || "").slice(0,7);
+      if (mm !== mo) return false;
+    }
+    return true;
+  }).forEach(d => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(d.no)}</td>
@@ -1071,8 +1110,22 @@ function renderDowntimeReportTable() {
 function renderActivityTable() {
   const tbody = document.querySelector("#activity-table tbody");
   if (!tbody) return;
+  const q = (document.getElementById("log-search")?.value || "").toLowerCase();
+  const kd = (document.getElementById("log-kind")?.value || "").toLowerCase();
+  const mo = (document.getElementById("log-month")?.value || "");
   tbody.innerHTML = "";
-  ACTIVITY_LOG.forEach(a => {
+  ACTIVITY_LOG.filter(a => {
+    if (q) {
+      const hay = (a.device + " " + a.message).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (kd && a.kind.toLowerCase() !== kd) return false;
+    if (mo) {
+      const mm = (a.time || "").slice(0,7);
+      if (mm !== mo) return false;
+    }
+    return true;
+  }).forEach(a => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(a.time)}</td>
@@ -1087,8 +1140,22 @@ function renderActivityTable() {
 function renderUsersTable() {
   const tbody = document.querySelector("#users-table tbody");
   if (!tbody) return;
+  const q = (document.getElementById("u-search")?.value || "").toLowerCase();
+  const rl = (document.getElementById("u-role")?.value || "").toLowerCase();
+  const mo = (document.getElementById("u-month")?.value || "");
   tbody.innerHTML = "";
-  USERS.forEach(u => {
+  USERS.filter(u => {
+    if (q) {
+      const hay = (u.fullName + " " + u.username + " " + u.email + " " + u.department + " " + u.designation).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (rl && u.role.toLowerCase() !== rl) return false;
+    if (mo) {
+      const mm = (u.created || "").slice(0,7);
+      if (mm !== mo) return false;
+    }
+    return true;
+  }).forEach(u => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(u.no)}</td>
@@ -1111,8 +1178,22 @@ function renderUsersTable() {
 function renderPendingUsersTable() {
   const tbody = document.querySelector("#pending-users-table tbody");
   if (!tbody) return;
+  const q = (document.getElementById("pu-search")?.value || "").toLowerCase();
+  const st = (document.getElementById("pu-status")?.value || "").toLowerCase();
+  const mo = (document.getElementById("pu-month")?.value || "");
   tbody.innerHTML = "";
-  PENDING_USERS.forEach(u => {
+  PENDING_USERS.filter(u => {
+    if (q) {
+      const hay = (u.fullName + " " + u.username + " " + u.email + " " + u.department).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (st && u.status.toLowerCase() !== st) return false;
+    if (mo) {
+      const mm = (u.requested || "").slice(0,7);
+      if (mm !== mo) return false;
+    }
+    return true;
+  }).forEach(u => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(u.id)}</td>
@@ -1136,8 +1217,22 @@ function renderPendingUsersTable() {
 function renderEmployeesTable() {
   const tbody = document.querySelector("#employees-table tbody");
   if (!tbody) return;
+  const q = (document.getElementById("emp-search")?.value || "").toLowerCase();
+  const rl = (document.getElementById("emp-role")?.value || "").toLowerCase();
+  const mo = (document.getElementById("emp-month")?.value || "");
   tbody.innerHTML = "";
-  EMPLOYEES.forEach(u => {
+  EMPLOYEES.filter(u => {
+    if (q) {
+      const hay = (u.fullName + " " + u.username + " " + u.email + " " + u.department + " " + u.designation).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (rl && u.role.toLowerCase() !== rl) return false;
+    if (mo) {
+      const mm = (u.created || "").slice(0,7);
+      if (mm !== mo) return false;
+    }
+    return true;
+  }).forEach(u => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(u.no)}</td>
@@ -1294,6 +1389,66 @@ async function loadData() {
     populateMonthSelect("c-month", CONSUMPTION.map(x => x.date));
     populateMonthSelect("a-month", ASSETS.map(x => x.created));
     populateMonthSelect("i-month", ITEMS.map(x => x.created));
+    populateMonthSelect("dev-month", DEVICES.map(x => x.lastChecked));
+    populateMonthSelect("m-month", MAINTENANCE.map(x => x.date));
+    populateMonthSelect("dr-month", DOWNTIME_REPORT.map(x => x.firstDown));
+    populateMonthSelect("log-month", ACTIVITY_LOG.map(x => x.time));
+    populateMonthSelect("u-month", USERS.map(x => x.created));
+    populateMonthSelect("pu-month", PENDING_USERS.map(x => x.requested));
+    populateMonthSelect("emp-month", EMPLOYEES.map(x => x.created));
+
+    // populate dropdowns
+    (function() {
+      const devType = document.getElementById("dev-type");
+      if (devType) {
+        const types = [...new Set(DEVICES.map(d => d.type).filter(Boolean))].sort();
+        while (devType.options.length > 1) devType.remove(1);
+        types.forEach(t => { const o = document.createElement("option"); o.value = t; o.textContent = t; devType.appendChild(o); });
+      }
+      const mStatus = document.getElementById("m-status");
+      if (mStatus) {
+        const vals = [...new Set(MAINTENANCE.map(m => m.status).filter(Boolean))].sort();
+        while (mStatus.options.length > 1) mStatus.remove(1);
+        vals.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; mStatus.appendChild(o); });
+      }
+      const mType = document.getElementById("m-type");
+      if (mType) {
+        const vals = [...new Set(MAINTENANCE.map(m => m.maintenanceType).filter(Boolean))].sort();
+        while (mType.options.length > 1) mType.remove(1);
+        vals.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; mType.appendChild(o); });
+      }
+      const drType = document.getElementById("dr-type");
+      if (drType) {
+        const vals = [...new Set(DOWNTIME_REPORT.map(d => d.type).filter(Boolean))].sort();
+        while (drType.options.length > 1) drType.remove(1);
+        vals.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; drType.appendChild(o); });
+      }
+      const logKind = document.getElementById("log-kind");
+      if (logKind) {
+        const vals = [...new Set(ACTIVITY_LOG.map(a => a.kind).filter(Boolean))].sort();
+        while (logKind.options.length > 1) logKind.remove(1);
+        vals.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; logKind.appendChild(o); });
+      }
+      const uRole = document.getElementById("u-role");
+      if (uRole) {
+        const vals = [...new Set(USERS.map(u => u.role).filter(Boolean))].sort();
+        while (uRole.options.length > 1) uRole.remove(1);
+        vals.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; uRole.appendChild(o); });
+      }
+      const puStatus = document.getElementById("pu-status");
+      if (puStatus) {
+        const vals = [...new Set(PENDING_USERS.map(u => u.status).filter(Boolean))].sort();
+        while (puStatus.options.length > 1) puStatus.remove(1);
+        vals.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; puStatus.appendChild(o); });
+      }
+      const empRole = document.getElementById("emp-role");
+      if (empRole) {
+        const vals = [...new Set(EMPLOYEES.map(u => u.role).filter(Boolean))].sort();
+        while (empRole.options.length > 1) empRole.remove(1);
+        vals.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; empRole.appendChild(o); });
+      }
+    })();
+
     renderConsumptionTable();
     renderAssetsTable();
     renderItemsTable();
@@ -1549,7 +1704,13 @@ document.addEventListener("DOMContentLoaded", () => {
   bindAuto(["c-date-from","c-date-to","c-item","c-warehouse","c-mill","c-month"], applyConsumptionFilters);
   bindAuto(["a-search","a-status","a-category","a-brand","a-plant","a-month"], applyAssetsFilters);
   bindAuto(["i-search","i-category","i-warehouse","i-month"], applyItemsFilters);
-  bindAuto(["dev-search","dev-status"], renderDevicesTable);
+  bindAuto(["dev-search","dev-status","dev-type","dev-month"], renderDevicesTable);
+  bindAuto(["m-search","m-status","m-type","m-month"], renderMaintenanceTable);
+  bindAuto(["dr-search","dr-status","dr-type","dr-month"], renderDowntimeReportTable);
+  bindAuto(["log-search","log-kind","log-month"], renderActivityTable);
+  bindAuto(["u-search","u-role","u-month"], renderUsersTable);
+  bindAuto(["pu-search","pu-status","pu-month"], renderPendingUsersTable);
+  bindAuto(["emp-search","emp-role","emp-month"], renderEmployeesTable);
 
   // Settings
   const saveSet = document.getElementById("save-settings");
@@ -1559,4 +1720,21 @@ document.addEventListener("DOMContentLoaded", () => {
       if (st) { st.textContent = "Saved"; st.className = ""; }
     });
   }
+
+  // Reset buttons
+  const resetDev = document.getElementById("reset-dev");
+  if (resetDev) resetDev.addEventListener("click", () => { document.getElementById("dev-search").value=""; document.getElementById("dev-status").value=""; document.getElementById("dev-type").value=""; document.getElementById("dev-month").value=""; renderDevicesTable(); });
+  const resetMaint = document.getElementById("reset-maint");
+  if (resetMaint) resetMaint.addEventListener("click", () => { document.getElementById("m-search").value=""; document.getElementById("m-status").value=""; document.getElementById("m-type").value=""; document.getElementById("m-month").value=""; renderMaintenanceTable(); });
+  const resetDr = document.getElementById("reset-dr");
+  if (resetDr) resetDr.addEventListener("click", () => { document.getElementById("dr-search").value=""; document.getElementById("dr-status").value=""; document.getElementById("dr-type").value=""; document.getElementById("dr-month").value=""; renderDowntimeReportTable(); });
+  const resetLog = document.getElementById("reset-log");
+  if (resetLog) resetLog.addEventListener("click", () => { document.getElementById("log-search").value=""; document.getElementById("log-kind").value=""; document.getElementById("log-month").value=""; renderActivityTable(); });
+  const resetUser = document.getElementById("reset-user");
+  if (resetUser) resetUser.addEventListener("click", () => { document.getElementById("u-search").value=""; document.getElementById("u-role").value=""; document.getElementById("u-month").value=""; renderUsersTable(); });
+  const resetPu = document.getElementById("reset-pu");
+  if (resetPu) resetPu.addEventListener("click", () => { document.getElementById("pu-search").value=""; document.getElementById("pu-status").value=""; document.getElementById("pu-month").value=""; renderPendingUsersTable(); });
+  const resetEmp = document.getElementById("reset-emp");
+  if (resetEmp) resetEmp.addEventListener("click", () => { document.getElementById("emp-search").value=""; document.getElementById("emp-role").value=""; document.getElementById("emp-month").value=""; renderEmployeesTable(); });
 });
+

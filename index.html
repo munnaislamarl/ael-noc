@@ -116,8 +116,14 @@
           <h2>Device List</h2>
           <div class="card">
             <div class="filter-grid">
-              <label>Search <input type="text" id="dev-search" placeholder="Name/IP/Type"></label>
+              <label>Search <input type="text" id="dev-search" placeholder="Name/IP/Type/Location"></label>
               <label>Status <select id="dev-status"><option value="">All</option><option>UP</option><option>DOWN</option></select></label>
+              <label>Type <select id="dev-type"><option value="">All</option></select></label>
+              <label>Month <select id="dev-month"><option value="">All</option></select></label>
+            </div>
+            <div class="filter-actions">
+              <button id="reset-dev" class="primary">Reset</button>
+              <span id="dev-status-msg" class="loading"></span>
             </div>
           </div>
           <div class="card">
@@ -207,6 +213,18 @@
         <section class="section" data-page="maintenance">
           <h2>Maintenance</h2>
           <div class="card">
+            <div class="filter-grid">
+              <label>Search <input type="text" id="m-search" placeholder="Device/Location/Type"></label>
+              <label>Status <select id="m-status"><option value="">All</option></select></label>
+              <label>Type <select id="m-type"><option value="">All</option></select></label>
+              <label>Month <select id="m-month"><option value="">All</option></select></label>
+            </div>
+            <div class="filter-actions">
+              <button id="reset-maint" class="primary">Reset</button>
+              <span id="maint-status-msg" class="loading"></span>
+            </div>
+          </div>
+          <div class="card">
             <div class="table-wrap">
               <table id="maintenance-table">
                 <thead><tr>
@@ -260,6 +278,18 @@
         <section class="section" data-page="downtime-report">
           <h2>Downtime Report</h2>
           <div class="card">
+            <div class="filter-grid">
+              <label>Search <input type="text" id="dr-search" placeholder="Device/Type/Location"></label>
+              <label>Status <select id="dr-status"><option value="">All</option><option>up</option><option>down</option></select></label>
+              <label>Type <select id="dr-type"><option value="">All</option></select></label>
+              <label>Month <select id="dr-month"><option value="">All</option></select></label>
+            </div>
+            <div class="filter-actions">
+              <button id="reset-dr" class="primary">Reset</button>
+              <span id="dr-status-msg" class="loading"></span>
+            </div>
+          </div>
+          <div class="card">
             <div class="table-wrap">
               <table id="downtime-report-table">
                 <thead><tr>
@@ -273,6 +303,17 @@
 
         <section class="section" data-page="log-report">
           <h2>Log Report</h2>
+          <div class="card">
+            <div class="filter-grid">
+              <label>Search <input type="text" id="log-search" placeholder="Device/Message"></label>
+              <label>Kind <select id="log-kind"><option value="">All</option></select></label>
+              <label>Month <select id="log-month"><option value="">All</option></select></label>
+            </div>
+            <div class="filter-actions">
+              <button id="reset-log" class="primary">Reset</button>
+              <span id="log-status-msg" class="loading"></span>
+            </div>
+          </div>
           <div class="card">
             <div class="table-wrap">
               <table id="activity-table">
@@ -289,6 +330,17 @@
         <section class="section" data-page="user-list">
           <h2>User List</h2>
           <div class="card">
+            <div class="filter-grid">
+              <label>Search <input type="text" id="u-search" placeholder="Name/Username/Email/Dept"></label>
+              <label>Role <select id="u-role"><option value="">All</option></select></label>
+              <label>Month <select id="u-month"><option value="">All</option></select></label>
+            </div>
+            <div class="filter-actions">
+              <button id="reset-user" class="primary">Reset</button>
+              <span id="user-status-msg" class="loading"></span>
+            </div>
+          </div>
+          <div class="card">
             <div class="table-wrap">
               <table id="users-table">
                 <thead><tr>
@@ -303,6 +355,17 @@
         <section class="section" data-page="pending-users">
           <h2>Pending Users</h2>
           <div class="card">
+            <div class="filter-grid">
+              <label>Search <input type="text" id="pu-search" placeholder="Name/Username/Email"></label>
+              <label>Status <select id="pu-status"><option value="">All</option></select></label>
+              <label>Month <select id="pu-month"><option value="">All</option></select></label>
+            </div>
+            <div class="filter-actions">
+              <button id="reset-pu" class="primary">Reset</button>
+              <span id="pu-status-msg" class="loading"></span>
+            </div>
+          </div>
+          <div class="card">
             <div class="table-wrap">
               <table id="pending-users-table">
                 <thead><tr>
@@ -316,6 +379,17 @@
 
         <section class="section" data-page="employee-list">
           <h2>Employee List</h2>
+          <div class="card">
+            <div class="filter-grid">
+              <label>Search <input type="text" id="emp-search" placeholder="Name/Username/Email/Dept"></label>
+              <label>Role <select id="emp-role"><option value="">All</option></select></label>
+              <label>Month <select id="emp-month"><option value="">All</option></select></label>
+            </div>
+            <div class="filter-actions">
+              <button id="reset-emp" class="primary">Reset</button>
+              <span id="emp-status-msg" class="loading"></span>
+            </div>
+          </div>
           <div class="card">
             <div class="table-wrap">
               <table id="employees-table">
