@@ -1121,6 +1121,48 @@ function renderDevicesTable() {
   });
 }
 
+let DR_ROWS = [];
+
+function localDateStr(d) {
+  const p = (n) => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+}
+
+/* YYYY-MM-DD day of an incident's start time (robust to different text formats) */
+function incDay(i) {
+  const m = /(\d{4})-(\d{1,2})-(\d{1,2})/.exec(i.downFrom || "");
+  if (m) return m[1] + "-" + m[2].padStart(2, "0") + "-" + m[3].padStart(2, "0");
+  if (i.downDate && !isNaN(i.downDate.getTime())) return localDateStr(i.downDate);
+  return "";
+}
+
+function toggleDrDetail(tr) {
+  const next = tr.nextElementSibling;
+  if (next && next.classList.contains("dr-detail")) {
+    next.remove();
+    tr.classList.remove("open");
+    return;
+  }
+  const g = DR_ROWS[parseInt(tr.dataset.idx, 10)];
+  if (!g) return;
+  const rows = g.incidents.slice().sort((a, b) => (b.downFrom || "").localeCompare(a.downFrom || "")).map((i, n) => `
+    <tr>
+      <td>${n + 1}</td>
+      <td>${escapeHtml(i.downFrom)}</td>
+      <td>${escapeHtml(i.backUp || "-")}</td>
+      <td>${escapeHtml(i.duration)}</td>
+      <td><span class="badge ${(i.state || "").toLowerCase() === "ongoing" ? "down" : "ok"}">${escapeHtml(i.state)}</span></td>
+    </tr>`).join("");
+  const d = document.createElement("tr");
+  d.className = "dr-detail";
+  d.innerHTML = `<td colspan="12">
+    <b>${escapeHtml(g.device)}</b> &middot; Total incidents: ${g.incidents.length}
+    <table style="margin-top:6px;"><thead><tr><th>#</th><th>Down from</th><th>Back up at</th><th>Duration</th><th>State</th></tr></thead><tbody>${rows}</tbody></table>
+  </td>`;
+  tr.after(d);
+  tr.classList.add("open");
+}
+
 function renderDowntimeReportTable() {
   const tbody = document.querySelector("#downtime-report-table tbody");
   const dateCard = document.getElementById("dr-date-table-card");
@@ -1142,8 +1184,9 @@ function renderDowntimeReportTable() {
     if (q && !(i.device.toLowerCase().includes(q) || i.ip.includes(q))) return false;
     if (ty && i.type.toLowerCase() !== ty) return false;
     if (dev && i.device.toLowerCase() !== dev) return false;
-    if (from && i.downFrom && i.downFrom < from) return false;
-    if (to && i.downFrom && i.downFrom.slice(0,10) > to) return false;
+    const day = incDay(i);
+    if (from && (!day || day < from)) return false;
+    if (to && (!day || day > to)) return false;
     return true;
   });
 
@@ -1159,38 +1202,63 @@ function renderDowntimeReportTable() {
   if (el("kpi-dr-wentup")) el("kpi-dr-wentup").textContent = wentDown + " / " + cameUp;
   if (el("kpi-dr-total")) el("kpi-dr-total").textContent = formatDowntime(totalMin);
   if (el("kpi-dr-still")) el("kpi-dr-still").textContent = stillDown;
-  if (el("dr-period")) el("dr-period").textContent = (from || "2026-11-01") + " → " + (to || "2026-11-12");
+  if (el("dr-period")) el("dr-period").textContent = (from || to) ? ((from || "start") + " → " + (to || "today")) : "All history";
 
-  // By device table
+  // By device table (built from the filtered incidents so the date range applies)
   if (tbody) {
     tbody.innerHTML = "";
-    const filteredDev = DOWNTIME_REPORT.filter(d => {
-      if (q) {
-        const hay = (d.device + " " + d.type + " " + d.location + " " + d.ip).toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      if (ty && d.type.toLowerCase() !== ty) return false;
-      if (dev && d.device.toLowerCase() !== dev) return false;
-      return true;
+    const groups = {};
+    filteredInc.forEach(i => {
+      const k = (i.device || "").trim();
+      if (!groups[k]) groups[k] = { device: k, ip: i.ip, type: i.type, location: i.location, incidents: [] };
+      groups[k].incidents.push(i);
     });
-    filteredDev.forEach(d => {
+    // period length (minutes) for availability
+    const todayStr = localDateStr(new Date());
+    const days = filteredInc.map(incDay).filter(Boolean).sort();
+    const pFrom = from || days[0] || todayStr;
+    const pTo = to || todayStr;
+    const pStartMs = new Date(pFrom + "T00:00:00").getTime();
+    const pEndMs = Math.min(new Date(pTo + "T23:59:59").getTime(), Date.now());
+    const periodMin = Math.max(1, (pEndMs - pStartMs) / 60000);
+    const hasRange = !!(from || to);
+    DR_ROWS = Object.values(groups).map(g => {
+      const down = g.incidents.length;
+      const up = g.incidents.filter(i => (i.state || "").toLowerCase() !== "ongoing").length;
+      const mins = g.incidents.reduce((a, b) => a + (b.minutes || 0), 0);
+      const longest = g.incidents.reduce((a, b) => Math.max(a, b.minutes || 0), 0);
+      const ongoing = g.incidents.some(i => (i.state || "").toLowerCase() === "ongoing");
+      const devObj = DEVICES.find(x => (x.name || "").trim() === g.device);
+      const now = ongoing ? "DOWN" : (devObj ? devObj.status : "UP");
+      const avail = hasRange ? Math.max(0, Math.min(100, 100 - (mins / periodMin) * 100)).toFixed(2) + "%" : "-";
+      return Object.assign(g, { down, up, mins, longest, now, avail });
+    }).sort((a, b) => b.mins - a.mins);
+    DR_ROWS.forEach((g, idx) => {
       const tr = document.createElement("tr");
+      tr.className = "dr-row";
+      tr.dataset.idx = String(idx);
+      tr.title = "Click to see all incidents of this device";
       tr.innerHTML = `
-        <td>${escapeHtml(d.no)}</td>
-        <td>${escapeHtml(d.device)}</td>
-        <td>${escapeHtml(d.ip)}</td>
-        <td>${escapeHtml(d.type)}</td>
-        <td>${escapeHtml(d.location)}</td>
-        <td>${escapeHtml(d.downTimes)}</td>
-        <td>${escapeHtml(d.upTimes)}</td>
-        <td>${escapeHtml(d.totalDowntime)}</td>
-        <td>${escapeHtml(d.minutes)}</td>
-        <td>${escapeHtml(d.longest)}</td>
-        <td>${escapeHtml(d.availability)}</td>
-        <td><span class="badge ${d.now.toLowerCase() === "up" ? "ok" : "down"}">${escapeHtml(d.now)}</span></td>
+        <td>${idx + 1}</td>
+        <td>${escapeHtml(g.device)}</td>
+        <td>${escapeHtml(g.ip)}</td>
+        <td>${escapeHtml(g.type)}</td>
+        <td>${escapeHtml(g.location)}</td>
+        <td>${g.down}</td>
+        <td>${g.up}</td>
+        <td>${escapeHtml(formatDowntime(g.mins))}</td>
+        <td>${Math.round(g.mins)}</td>
+        <td>${escapeHtml(formatDowntime(g.longest))}</td>
+        <td>${escapeHtml(g.avail)}</td>
+        <td><span class="badge ${String(g.now).toLowerCase() === "up" ? "ok" : "down"}">${escapeHtml(g.now)}</span></td>
       `;
       tbody.appendChild(tr);
     });
+    if (!DR_ROWS.length) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = '<td colspan="12" style="text-align:center;color:var(--muted);padding:14px;">No downtime incidents found for the selected filters / date range.</td>';
+      tbody.appendChild(tr);
+    }
   }
 
   // By date table
@@ -1894,7 +1962,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const fromEl = document.getElementById("dr-from");
       const toEl = document.getElementById("dr-to");
       const today = new Date();
-      const fmt = (d) => d.toISOString().slice(0,10);
+      const fmt = localDateStr;
       if (r === "today") { fromEl.value = fmt(today); toEl.value = fmt(today); }
       else if (r === "yesterday") { const y = new Date(today); y.setDate(y.getDate()-1); fromEl.value = fmt(y); toEl.value = fmt(y); }
       else if (r === "month") { const first = new Date(today.getFullYear(), today.getMonth(), 1); fromEl.value = fmt(first); toEl.value = fmt(today); }
@@ -1903,6 +1971,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
   bindAuto(["dr-search","dr-type","dr-device","dr-from","dr-to"], renderDowntimeReportTable);
+  const drBody = document.querySelector("#downtime-report-table tbody");
+  if (drBody) drBody.addEventListener("click", (e) => {
+    const tr = e.target.closest("tr.dr-row");
+    if (tr) toggleDrDetail(tr);
+  });
+  // Date inputs: clicking anywhere in the box opens the calendar
+  document.querySelectorAll('input[type="date"]').forEach(inp => {
+    const open = () => { try { if (inp.showPicker) inp.showPicker(); } catch (err) {} };
+    inp.addEventListener("click", open);
+    inp.addEventListener("focus", open);
+  });
   const resetLog = document.getElementById("reset-log");
   if (resetLog) resetLog.addEventListener("click", () => { document.getElementById("log-search").value=""; document.getElementById("log-kind").value=""; document.getElementById("log-month").value=""; renderActivityTable(); });
   const resetUser = document.getElementById("reset-user");
