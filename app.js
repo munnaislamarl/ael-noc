@@ -2067,44 +2067,8 @@ function showPage(page) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Login gate
-  const overlay = document.getElementById("login-overlay");
-  const isLogged = (function(){ try { return !!localStorage.getItem("aelnoc_user"); } catch(e){ return false; } })();
-  if (isLogged) { if (overlay) overlay.classList.add("hidden"); }
-  else { if (overlay) overlay.classList.remove("hidden"); }
-
-  const loginBtn = document.getElementById("login-btn");
-  if (loginBtn) {
-    loginBtn.addEventListener("click", () => {
-
-      const u = (document.getElementById("login-user").value || "").trim();
-      const p = document.getElementById("login-pass").value || "";
-      const err = document.getElementById("login-error");
-      // validate against users list or default admin
-      let ok = false;
-      if (u === "admin" && p === "Admin@123") ok = true;
-      if (USERS && USERS.length) {
-        const found = USERS.find(x => (x.username === u || x.email === u));
-        // password not stored in sheet; accept if username exists and password matches username or default
-        if (found && (p === "Admin@123" || p === found.username)) ok = true;
-      }
-      if (ok) {
-        try { localStorage.setItem("aelnoc_user", u); } catch(e){}
-        if (overlay) overlay.classList.add("hidden");
-        if (err) err.textContent = "";
-        loadData();
-      } else {
-        if (err) err.textContent = "Invalid username or password.";
-      }
-    });
-  }
-  const signout = document.getElementById("signout-btn");
-  if (signout) {
-    signout.addEventListener("click", () => {
-      try { localStorage.removeItem("aelnoc_user"); } catch(e){}
-      if (overlay) overlay.classList.remove("hidden");
-    });
-  }
+  // Login gate is handled by auth.js (AUTH.init)
+  const isLogged = !!(window.AUTH && AUTH.hasSession());
 
   const saved = (function(){ try { return localStorage.getItem("activePage"); } catch(e){ return null; } })();
   showPage(saved || "dashboard");

@@ -12,14 +12,56 @@
     <div class="login-card">
       <div class="login-logo">AEL-NOC</div>
       <h2>Network Operation Center</h2>
-      <p class="login-sub">Secured access &mdash; IT Infrastructure &amp; Security</p>
-      <form id="login-form">
+      <p class="login-sub" id="login-sub">Secured access &mdash; IT Infrastructure &amp; Security</p>
+
+      <!-- Sign in -->
+      <form id="login-form" data-view="signin" autocomplete="on">
         <label>Email / Username <input type="text" id="login-user" autocomplete="username" required></label>
         <label>Password <input type="password" id="login-pass" autocomplete="current-password" required></label>
-        <button type="button" id="login-btn" class="primary login-btn">Sign in</button>
-        <p id="login-error" class="login-error"></p>
+        <button type="submit" id="login-btn" class="primary login-btn">Sign in</button>
+        <p id="login-error" class="login-error" role="alert"></p>
+        <p class="login-switch">No account yet? <a href="#" id="go-request">Request Access</a></p>
       </form>
-      <p class="login-hint">Default: admin / Admin@123</p>
+
+      <!-- Request access -->
+      <form id="request-form" data-view="request" hidden autocomplete="off">
+        <div class="login-grid">
+          <label>Full name * <input type="text" id="rq-name" required maxlength="80"></label>
+          <label>Username * <input type="text" id="rq-user" required maxlength="32" placeholder="e.g. jihad" autocapitalize="none"></label>
+          <label>Email * <input type="email" id="rq-email" required maxlength="100"></label>
+          <label>Phone <input type="tel" id="rq-phone" maxlength="30"></label>
+          <label>Employee ID <input type="text" id="rq-empid" maxlength="30"></label>
+          <label>Designation <input type="text" id="rq-desig" maxlength="80"></label>
+          <label>Department <input type="text" id="rq-dept" maxlength="80"></label>
+          <label>Location / Plant <input type="text" id="rq-loc" maxlength="80"></label>
+          <label class="span2">Access needed <select id="rq-role"></select></label>
+          <label class="span2">Reason for access <textarea id="rq-reason" rows="2" maxlength="300"></textarea></label>
+          <label>Choose password * <input type="password" id="rq-pass" required autocomplete="new-password" minlength="8"></label>
+          <label>Confirm password * <input type="password" id="rq-pass2" required autocomplete="new-password" minlength="8"></label>
+        </div>
+        <p class="login-note">Min 8 characters, with letters and a number. You can sign in after a system admin approves your request.</p>
+        <button type="submit" id="rq-btn" class="primary login-btn">Send request</button>
+        <p id="rq-error" class="login-error" role="alert"></p>
+        <p class="login-switch"><a href="#" id="go-signin">&larr; Back to sign in</a></p>
+      </form>
+
+      <!-- Request sent -->
+      <div id="request-done" data-view="done" hidden>
+        <div class="login-ok">✔</div>
+        <h3>Request sent</h3>
+        <p class="login-sub">A system admin will review it. Once approved, sign in with your username (or email) and the password you chose.</p>
+        <button type="button" class="primary login-btn" id="done-back">Back to sign in</button>
+      </div>
+
+      <!-- Forced password change -->
+      <form id="chpw-form" data-view="chpw" hidden autocomplete="off">
+        <p class="login-note" style="margin-top:0">You must set a new password before continuing.</p>
+        <label>Current (temporary) password <input type="password" id="cp-old" required autocomplete="current-password"></label>
+        <label>New password <input type="password" id="cp-new" required minlength="8" autocomplete="new-password"></label>
+        <label>Confirm new password <input type="password" id="cp-new2" required minlength="8" autocomplete="new-password"></label>
+        <button type="submit" id="cp-btn" class="primary login-btn">Save password</button>
+        <p id="cp-error" class="login-error" role="alert"></p>
+      </form>
     </div>
   </div>
   <div class="container">
@@ -32,6 +74,7 @@
         <span id="load-status" class="loading">Loading…</span>
         <span id="status-badge" class="badge ok">-</span>
         <button id="refresh-btn" class="primary">Refresh</button>
+        <span id="user-chip" class="user-chip" hidden></span>
         <button id="signout-btn" class="danger-btn">Sign out</button>
       </div>
     </header>
@@ -57,8 +100,8 @@
         <div class="nav-group">
           <button class="nav-item nav-parent" data-toggle="users"><span class="nav-icon">👥</span> User &amp; Employee <span class="nav-arrow">▶</span></button>
           <div class="nav-sub" id="sub-users">
-            <button class="nav-subitem" data-page="user-list"><span class="nav-icon">📄</span> User List</button>
-            <button class="nav-subitem" data-page="pending-users"><span class="nav-icon">⏳</span> Pending Users</button>
+            <button class="nav-subitem" data-page="user-list"><span class="nav-icon">👥</span> User Management</button>
+            <button class="nav-subitem" data-page="pending-users"><span class="nav-icon">⏳</span> Pending Users <span id="nav-pending-badge" class="um-pill" hidden></span></button>
             <button class="nav-subitem" data-page="employee-list"><span class="nav-icon">🧑‍💼</span> Employee List</button>
           </div>
         </div>
@@ -380,24 +423,34 @@
 
         <!-- User & Employee -->
         <section class="section" data-page="user-list">
-          <h2>User List</h2>
+          <h2>👥 User management</h2>
+          <div class="um-actions">
+            <button id="um-new" class="primary">＋ New user</button>
+            <button id="um-pending">⏳ Pending users <span id="um-pending-count" class="um-pill" hidden></span></button>
+            <span id="um-msg" class="loading"></span>
+          </div>
+          <div class="card um-roles">
+            <div><b>Super Admin</b><span>Full control, including users and system</span></div>
+            <div><b>IT Manager</b><span>All IT work + user list, system info, approvals</span></div>
+            <div><b>IT Officer / Engineer</b><span>Manage devices, assets, records and catalogs</span></div>
+            <div><b>Employee / IT User</b><span>Dashboard status and own tickets only</span></div>
+            <div><b>Management / Viewer</b><span>Read-only access, no credentials</span></div>
+          </div>
           <div class="card">
             <div class="filter-grid">
-              <label>Search <input type="text" id="u-search" placeholder="Name/Username/Email/Dept"></label>
-              <label>Role <select id="u-role"><option value="">All</option></select></label>
-              <label>Month <select id="u-month"><option value="">All</option></select></label>
+              <label>Search <input type="text" id="um-search" placeholder="Search name, username or email"></label>
+              <label>Role <select id="um-role"><option value="">All roles</option></select></label>
+              <label>Status <select id="um-status"><option value="">All status</option><option value="active">Active</option><option value="must change password">Must change password</option><option value="disabled">Disabled</option></select></label>
             </div>
             <div class="filter-actions">
-              <button id="reset-user" class="primary">Reset</button>
-              <span id="user-status-msg" class="loading"></span>
+              <button id="reset-um" class="primary">↺ Reset</button>
+              <span id="um-count" class="page-info"></span>
             </div>
           </div>
           <div class="card">
             <div class="table-wrap">
-              <table id="users-table">
-                <thead><tr>
-                  <th>No</th><th>Full name</th><th>Username</th><th>Employee ID</th><th>Designation</th><th>Department</th><th>Location / Plant</th><th>Email</th><th>Phone</th><th>Role</th><th>Account</th><th>Created</th>
-                </tr></thead>
+              <table id="um-table">
+                <thead><tr><th>#</th><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -405,24 +458,22 @@
         </section>
 
         <section class="section" data-page="pending-users">
-          <h2>Pending Users</h2>
+          <h2>⏳ Pending users</h2>
           <div class="card">
             <div class="filter-grid">
-              <label>Search <input type="text" id="pu-search" placeholder="Name/Username/Email"></label>
-              <label>Status <select id="pu-status"><option value="">All</option></select></label>
-              <label>Month <select id="pu-month"><option value="">All</option></select></label>
+              <label>Search <input type="text" id="pr-search" placeholder="Name / username / email"></label>
+              <label>Status <select id="pr-status"><option value="">All</option><option value="pending" selected>Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label>
             </div>
             <div class="filter-actions">
-              <button id="reset-pu" class="primary">Reset</button>
-              <span id="pu-status-msg" class="loading"></span>
+              <button id="reset-pr" class="primary">↺ Reset</button>
+              <span id="pr-count" class="page-info"></span>
+              <span id="pr-msg" class="loading"></span>
             </div>
           </div>
           <div class="card">
             <div class="table-wrap">
-              <table id="pending-users-table">
-                <thead><tr>
-                  <th>ID</th><th>Requested</th><th>Full name</th><th>Username</th><th>Email</th><th>Phone</th><th>Department</th><th>Designation</th><th>Employee ID</th><th>Location</th><th>Wants role</th><th>Reason</th><th>Status</th>
-                </tr></thead>
+              <table id="pr-table">
+                <thead><tr><th>Requested</th><th>Full name</th><th>Username</th><th>Email</th><th>Phone</th><th>Department</th><th>Designation</th><th>Employee ID</th><th>Location</th><th>Wants role</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -492,5 +543,6 @@
     </footer>
   </div>
   <script src="app.js"></script>
+  <script src="auth.js"></script>
 </body>
 </html>
