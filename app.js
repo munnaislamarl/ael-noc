@@ -1136,9 +1136,9 @@ function incDay(i) {
 const DM_RANGES = [
   ["all", "All history"], ["today", "Today"], ["yesterday", "Yesterday"],
   ["7", "Last 7 days"], ["14", "Last 14 days"], ["30", "Last 30 days"],
-  ["month", "This month"], ["lastmonth", "Last month"]
+  ["month", "This month"], ["lastmonth", "Last month"], ["custom", "Custom range"]
 ];
-let DM = { device: "", range: "all", rows: [] };
+let DM = { device: "", range: "all", from: "", to: "", rows: [] };
 
 function parseTs(str) {
   if (!str) return null;
@@ -1196,6 +1196,9 @@ function ensureDeviceModal() {
       </div>
       <div class="dm-toolbar">
         <select id="dm-range">${DM_RANGES.map(r => `<option value="${r[0]}">${r[1]}</option>`).join("")}</select>
+        <label class="dm-date">From <input type="date" id="dm-from"></label>
+        <label class="dm-date">To <input type="date" id="dm-to"></label>
+        <button id="dm-clear-dates" title="Clear dates (all history)">✕ Clear</button>
         <button id="dm-details-btn">🗄 Device details</button>
         <button id="dm-export">⬇ Export Excel</button>
         <span class="dm-count" id="dm-count"></span>
@@ -1219,7 +1222,29 @@ function ensureDeviceModal() {
   document.body.appendChild(ov);
   ov.addEventListener("click", (e) => { if (e.target === ov) closeDeviceModal(); });
   ov.querySelector("#dm-close").addEventListener("click", closeDeviceModal);
-  ov.querySelector("#dm-range").addEventListener("change", (e) => { DM.range = e.target.value; renderDeviceModal(); });
+  const dmSetDates = (f, t) => {
+    DM.from = f; DM.to = t;
+    ov.querySelector("#dm-from").value = f;
+    ov.querySelector("#dm-to").value = t;
+  };
+  ov.querySelector("#dm-range").addEventListener("change", (e) => {
+    DM.range = e.target.value;
+    if (DM.range !== "custom") { const d = quickRangeDates(DM.range); dmSetDates(d[0], d[1]); }
+    renderDeviceModal();
+  });
+  const onDmDate = () => {
+    DM.from = ov.querySelector("#dm-from").value;
+    DM.to = ov.querySelector("#dm-to").value;
+    if (DM.from && DM.to && DM.from > DM.to) { const t = DM.from; DM.from = DM.to; DM.to = t; ov.querySelector("#dm-from").value = DM.from; ov.querySelector("#dm-to").value = DM.to; }
+    DM.range = (DM.from || DM.to) ? "custom" : "all";
+    ov.querySelector("#dm-range").value = DM.range;
+    renderDeviceModal();
+  };
+  ov.querySelector("#dm-from").addEventListener("change", onDmDate);
+  ov.querySelector("#dm-to").addEventListener("change", onDmDate);
+  ov.querySelector("#dm-clear-dates").addEventListener("click", () => {
+    DM.range = "all"; dmSetDates("", ""); ov.querySelector("#dm-range").value = "all"; renderDeviceModal();
+  });
   ov.querySelector("#dm-details-btn").addEventListener("click", () => {
     const el = document.getElementById("dm-details");
     el.style.display = el.style.display === "none" ? "" : "none";
@@ -1238,6 +1263,8 @@ function openDeviceModal(device, range) {
   DM.device = (device || "").trim();
   DM.range = range || "all";
   ov.querySelector("#dm-range").value = DM.range;
+  { const d = quickRangeDates(DM.range === "custom" ? "all" : DM.range); DM.from = d[0]; DM.to = d[1];
+    ov.querySelector("#dm-from").value = DM.from; ov.querySelector("#dm-to").value = DM.to; }
   document.getElementById("dm-details").style.display = "none";
   ov.classList.add("open");
   document.body.style.overflow = "hidden";
@@ -1246,7 +1273,7 @@ function openDeviceModal(device, range) {
 function renderDeviceModal() {
   const name = DM.device;
   const all = INCIDENTS.filter(i => (i.device || "").trim() === name);
-  const [fromStr, toStr] = quickRangeDates(DM.range);
+  const [fromStr, toStr] = DM.range === "custom" ? [DM.from, DM.to] : quickRangeDates(DM.range);
   const list = all.filter(i => {
     const day = incDay(i);
     if (fromStr && (!day || day < fromStr)) return false;
@@ -1264,7 +1291,7 @@ function renderDeviceModal() {
   const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
   set("dm-icon", deviceIcon(type));
   set("dm-name", name);
-  set("dm-scope", "— " + (DM.range === "all" ? "all incidents" : scope.toLowerCase()));
+  set("dm-scope", "— " + (DM.range === "all" ? "all incidents" : DM.range === "custom" ? ((fromStr || "…") + " → " + (toStr || "today")) : scope.toLowerCase()));
   set("dm-sub", [ip, type].filter(Boolean).join(" · "));
   set("dm-count", list.length + " incident" + (list.length === 1 ? "" : "s"));
 
@@ -2044,7 +2071,22 @@ function resetItemsFilters() {
   renderItemsTable();
 }
 
+function renderProfile() {
+  let u = null;
+  try { const s = JSON.parse(localStorage.getItem("aelnoc_session") || "null"); u = s && s.user; } catch (e) { u = null; }
+  u = u || {};
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = (v === undefined || v === null || v === "") ? "-" : v; };
+  const name = u.fullName || u.username || "";
+  set("pf-name", name);
+  set("pf-username", u.username ? "@" + u.username : "");
+  set("pf-role", u.role); set("pf-account", u.account || (u.username ? "active" : ""));
+  set("pf-empid", u.employeeId); set("pf-designation", u.designation); set("pf-department", u.department);
+  set("pf-location", u.location); set("pf-email", u.email); set("pf-phone", u.phone);
+  set("pf-avatar", name ? name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase() : "?");
+}
+
 function showPage(page) {
+  if (page === "settings") renderProfile();
   document.querySelectorAll("section.section").forEach(sec => {
     sec.style.display = (sec.dataset.page === page) ? "" : "none";
   });

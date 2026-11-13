@@ -508,20 +508,59 @@
         <!-- Settings -->
         <section class="section" data-page="settings">
           <h2>Settings</h2>
-          <div class="card">
-            <div class="filter-grid">
-              <label>Refresh interval (sec) <input type="number" id="set-refresh" value="300" min="60"></label>
-              <label>Theme <select id="set-theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
-              <label>Rows per page <select id="set-pagesize"><option>25</option><option selected>50</option><option>100</option></select></label>
+          <div class="settings-grid">
+
+            <!-- Profile -->
+            <div class="card set-card" id="set-profile-card">
+              <div class="set-card-head">
+                <span class="set-icon set-icon-profile">&#128100;</span>
+                <div>
+                  <h3>Profile</h3>
+                  <p>Your account information</p>
+                </div>
+              </div>
+              <div class="profile-top">
+                <div class="profile-avatar" id="pf-avatar">?</div>
+                <div class="profile-id">
+                  <div class="profile-name" id="pf-name">-</div>
+                  <div class="profile-user" id="pf-username">-</div>
+                  <div class="profile-badges"><span class="pf-badge" id="pf-role">-</span><span class="pf-badge pf-ok" id="pf-account">-</span></div>
+                </div>
+              </div>
+              <div class="profile-fields">
+                <div><span>Employee ID</span><b id="pf-empid">-</b></div>
+                <div><span>Designation</span><b id="pf-designation">-</b></div>
+                <div><span>Department</span><b id="pf-department">-</b></div>
+                <div><span>Location / Plant</span><b id="pf-location">-</b></div>
+                <div><span>Email</span><b id="pf-email">-</b></div>
+                <div><span>Phone</span><b id="pf-phone">-</b></div>
+              </div>
             </div>
-            <div class="filter-actions">
-              <button id="save-settings" class="primary">Save Settings</button>
-              <span id="settings-status" class="loading"></span>
+
+            <!-- Appearance -->
+            <div class="card set-card">
+              <div class="set-card-head">
+                <span class="set-icon set-icon-appearance">&#127912;</span>
+                <div>
+                  <h3>Appearance</h3>
+                  <p>Theme, refresh and table display</p>
+                </div>
+              </div>
+              <div class="set-fields">
+                <label>Theme <select id="set-theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+                <label>Refresh interval (sec) <input type="number" id="set-refresh" value="300" min="60"></label>
+                <label>Rows per page <select id="set-pagesize"><option>25</option><option selected>50</option><option>100</option></select></label>
+              </div>
+              <div class="set-actions">
+                <span id="settings-status" class="loading"></span>
+                <button id="save-settings" class="primary">Save Settings</button>
+              </div>
             </div>
+
           </div>
-          <div class="card">
-            <h3 style="margin:0 0 8px;">About</h3>
-            <p style="margin:0;color:var(--muted);font-size:.9rem;">AEL-NOC Dashboard &middot; Data source: Google Sheets (Factory Network Monitor). Static HTML hosted on GitHub Pages.</p>
+          <div class="card set-about">
+            <h3>About</h3>
+            <p>AEL-NOC Dashboard &middot; Data source: Google Sheets (Factory Network Monitor). Static HTML hosted on GitHub Pages.</p>
           </div>
         </section>
 

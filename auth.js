@@ -2,7 +2,7 @@
    Needs the Apps Script backend in /apps-script (see apps-script/SETUP.md). */
 
 // Paste your deployed Apps Script Web App URL here (ends with /exec)
-const AUTH_API_URL = "https://script.google.com/macros/s/AKfycbyaZXwPLNcx1QeGe7hDJ3O-qJjmoBx09JRaG49-ErQRMP6q7OXEtO7Wcuxkebnce3XW5g/exec";
+const AUTH_API_URL = "";
 
 const AUTH_ROLES = ["Super Admin", "IT Manager", "IT Officer / Engineer", "Employee / IT User", "Management / Viewer"];
 const OPS_PAGES = ["dashboard", "devices", "assets", "items", "maintenance", "consumption", "downtime-report", "log-report"];
