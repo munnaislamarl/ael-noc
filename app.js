@@ -280,24 +280,61 @@ function renderAll(d) {
   badge.className = "badge ok";
 }
 
+/* ------------------------------------------------------------------ */
+/* Header helpers - sheet columns shift over time, resolve by name     */
+/* ------------------------------------------------------------------ */
+function headerMap(rows) {
+  const map = {};
+  if (!rows || !rows.length) return map;
+  const hdr = rows[0] || [];
+  for (let i = 0; i < hdr.length; i++) {
+    const key = String(hdr[i] || "").trim().toLowerCase();
+    if (key) map[key] = i;
+  }
+  return map;
+}
+function cell(row, map, names, fallbackIdx) {
+  if (row && map) {
+    for (const n of names) {
+      const idx = map[String(n).toLowerCase()];
+      if (idx !== undefined && row[idx] !== undefined && String(row[idx]).trim() !== "") {
+        return String(row[idx]).trim();
+      }
+    }
+  }
+  if (fallbackIdx !== undefined && row && row[fallbackIdx] !== undefined) return String(row[fallbackIdx]).trim();
+  return "";
+}
+function cellNum(row, map, names, fallbackIdx) {
+  const v = cell(row, map, names, fallbackIdx);
+  const n = Number(String(v).replace(/,/g, ""));
+  return isNaN(n) ? 0 : n;
+}
+function findHeaderRow(rows) {
+  if (!rows || !rows.length) return 0;
+  for (let i = 0; i < Math.min(rows.length, 5); i++) {
+    const r = (rows[i] || []).join(" ").toLowerCase();
+    if (r.includes("device") || r.includes("name") || r.includes("date") || r.includes("time")) return i;
+  }
+  return 0;
+}
+
 function parseIncidents(rows) {
   const out = [];
   if (!rows || rows.length < 2) return out;
-  // find header
-  let start = 0;
-  if (rows[0] && /device/i.test(rows[0][0])) start = 1;
-  for (let i = start; i < rows.length; i++) {
-    const r = rows[i];
+  const hi = findHeaderRow(rows);
+  const map = headerMap(rows.slice(hi));
+  for (const r of rows.slice(hi + 1)) {
     if (!r || r.length === 0) continue;
-    const device = (r[0] || "").trim();
+    const device = cell(r, map, ["device (click to see incidents)", "device", "device name"]);
     if (!device) continue;
-    const ip = (r[1] || "").trim();
-    const type = (r[2] || "").trim();
-    const location = (r[3] || "").trim();
-    const downFrom = (r[4] || "").trim();
-    const backUp = (r[5] || "").trim();
-    const duration = (r[6] || "").trim();
-    const state = (r[7] || "").trim();
+    const ip = cell(r, map, ["ip address", "ip"]);
+    const type = cell(r, map, ["type"]);
+    const location = cell(r, map, ["location"]);
+    const downFrom = cell(r, map, ["down from", "downtime from", "from"]);
+    const backUp = cell(r, map, ["back up at", "up at", "recovered at", "to"]);
+    const duration = cell(r, map, ["duration"]);
+    const state = cell(r, map, ["state", "status"]);
     out.push({
       device, ip, type, location, downFrom, backUp, duration, state,
       downDate: downFrom ? new Date(downFrom.replace(" ", "T")) : null,
@@ -331,28 +368,27 @@ function parseDateIncidents(rows) {
 function parseDeviceDowntime(rows) {
   const out = [];
   if (!rows || rows.length < 2) return out;
-  let start = 0;
-  if (rows[0] && /no|device/i.test(rows[0][0] + rows[0][1])) start = 1;
-  for (let i = start; i < rows.length; i++) {
-    const r = rows[i];
+  const hi = findHeaderRow(rows);
+  const map = headerMap(rows.slice(hi));
+  for (const r of rows.slice(hi + 1)) {
     if (!r || r.length === 0) continue;
-    const device = (r[1] || "").trim();
+    const device = cell(r, map, ["device", "device name"]);
     if (!device) continue;
     out.push({
-      no: (r[0] || "").trim(),
+      no: cell(r, map, ["no", "serial"]),
       device,
-      ip: (r[2] || "").trim(),
-      type: (r[3] || "").trim(),
-      location: (r[4] || "").trim(),
-      downTimes: (r[5] || "").trim(),
-      upTimes: (r[6] || "").trim(),
-      totalDowntime: (r[7] || "").trim(),
-      hours: (r[8] || "").trim(),
-      minutes: numOr(r[9], 0),
-      longest: (r[10] || "").trim(),
-      firstDown: (r[11] || "").trim(),
-      lastDown: (r[12] || "").trim(),
-      now: (r[13] || "").trim()
+      ip: cell(r, map, ["ip address", "ip"]),
+      type: cell(r, map, ["type"]),
+      location: cell(r, map, ["location"]),
+      downTimes: cell(r, map, ["down (times)"]),
+      upTimes: cell(r, map, ["up (times)"]),
+      totalDowntime: cell(r, map, ["total downtime"]),
+      hours: cell(r, map, ["total downtime (hours)"]),
+      minutes: cellNum(r, map, ["downtime (min)"]),
+      longest: cell(r, map, ["longest outage"]),
+      firstDown: cell(r, map, ["first down"]),
+      lastDown: cell(r, map, ["last down"]),
+      now: cell(r, map, ["now", "status"])
     });
   }
   return out;
@@ -543,23 +579,23 @@ function parseEmployees(rows) {
 function parseDevices(rows) {
   const out = [];
   if (!rows || rows.length < 2) return out;
-  let start = 0;
-  if (rows[0] && /no|name/i.test(rows[0][0] + rows[0][1])) start = 1;
-  for (let i = start; i < rows.length; i++) {
-    const r = rows[i];
+  const hi = findHeaderRow(rows);
+  const map = headerMap(rows.slice(hi));
+  for (const r of rows.slice(hi + 1)) {
     if (!r || r.length === 0) continue;
-    if (!(r[1])) continue;
+    const name = cell(r, map, ["name", "device", "device name"]);
+    if (!name) continue;
     out.push({
-      no: (r[0] || "").trim(),
-      name: (r[1] || "").trim(),
-      ip: (r[2] || "").trim(),
-      type: (r[3] || "").trim(),
-      location: (r[4] || "").trim(),
-      status: (r[5] || "").trim(),
-      response: (r[6] || "").trim(),
-      statusSince: (r[7] || "").trim(),
-      lastChecked: (r[8] || "").trim(),
-      uptime: (r[9] || "").trim()
+      no: cell(r, map, ["no", "serial"]),
+      name,
+      ip: cell(r, map, ["ip address", "ip"]),
+      type: cell(r, map, ["type"]),
+      location: cell(r, map, ["location"]),
+      status: cell(r, map, ["status"]),
+      response: cell(r, map, ["response (ms)", "response"]),
+      statusSince: cell(r, map, ["status since"]),
+      lastChecked: cell(r, map, ["last checked"]),
+      uptime: cell(r, map, ["uptime 24h (%)", "uptime (%)"])
     });
   }
   return out;
@@ -568,25 +604,29 @@ function parseDevices(rows) {
 function parseDowntimeReport(rows) {
   const out = [];
   if (!rows || rows.length < 2) return out;
-  let start = 0;
-  if (rows[0] && /no|device/i.test(rows[0][0] + rows[0][1])) start = 1;
-  for (let i = start; i < rows.length; i++) {
-    const r = rows[i];
+  const hi = findHeaderRow(rows);
+  const map = headerMap(rows.slice(hi));
+  for (const r of rows.slice(hi + 1)) {
     if (!r || r.length === 0) continue;
-    if (!(r[1])) continue;
+    const device = cell(r, map, ["device", "device name"]);
+    if (!device) continue;
     out.push({
-      no: (r[0] || "").trim(),
-      device: (r[1] || "").trim(),
-      ip: (r[2] || "").trim(),
-      type: (r[3] || "").trim(),
-      location: (r[4] || "").trim(),
-      downTimes: (r[5] || "").trim(),
-      upTimes: (r[6] || "").trim(),
-      totalDowntime: (r[7] || "").trim(),
-      minutes: (r[8] || "").trim(),
-      longest: (r[9] || "").trim(),
-      availability: (r[10] || "").trim(),
-      now: (r[11] || "").trim()
+      no: cell(r, map, ["serial", "no"]),
+      device,
+      ip: cell(r, map, ["ip address", "ip"]),
+      type: cell(r, map, ["type"]),
+      location: cell(r, map, ["location"]),
+      downTimes: cell(r, map, ["down (times)"]),
+      upTimes: cell(r, map, ["up (times)"]),
+      totalDowntime: cell(r, map, ["total downtime"]),
+      minutes: cell(r, map, ["downtime (min)"]),
+      longest: cell(r, map, ["longest outage"]),
+      availability: cell(r, map, ["availability (%)"]),
+      uptime24h: cell(r, map, ["uptime 24h (%)"]),
+      uptimeMonth: cell(r, map, ["uptime (current month %)", "uptime (month %)"]),
+      firstDown: cell(r, map, ["first down"]),
+      lastDown: cell(r, map, ["last down"]),
+      now: cell(r, map, ["now", "status"])
     });
   }
   return out;
@@ -647,16 +687,18 @@ function renderIncidentKPIs(list) {
   const devices = new Set(list.map(x => x.device));
   const minutes = list.reduce((a, b) => a + (b.minutes || 0), 0);
   const ongoing = list.filter(x => x.state.toLowerCase() === "ongoing").length;
-  document.getElementById("kpi-f-incidents").textContent = fmt(list.length);
-  document.getElementById("kpi-f-devices").textContent = fmt(devices.size);
-  document.getElementById("kpi-f-minutes").textContent = fmt(Math.round(minutes));
-  document.getElementById("kpi-f-ongoing").textContent = fmt(ongoing);
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set("kpi-f-incidents", fmt(list.length));
+  set("kpi-f-devices", fmt(devices.size));
+  set("kpi-f-minutes", fmt(Math.round(minutes)));
+  set("kpi-f-ongoing", fmt(ongoing));
 }
 
 function renderIncidentsTable() {
   const list = getFilteredIncidents();
   renderIncidentKPIs(list);
   const tbody = document.querySelector("#incidents-table tbody");
+  if (!tbody) return;
   tbody.innerHTML = "";
   const start = (incidentPage - 1) * PAGE_SIZE;
   const pageRows = list.slice(start, start + PAGE_SIZE);
@@ -730,6 +772,7 @@ function aggregateDateIncidents() {
 function renderDateIncidents() {
   const agg = aggregateDateIncidents();
   const tbody = document.querySelector("#date-incidents-table tbody");
+  if (!tbody) return;
   tbody.innerHTML = "";
   for (const row of agg) {
     const tr = document.createElement("tr");
@@ -744,6 +787,7 @@ function renderDateIncidents() {
   }
   // chart
   const ctx = document.getElementById("chart-date-incidents");
+  if (!ctx) return;
   if (charts.dateIncidents) charts.dateIncidents.destroy();
   charts.dateIncidents = new Chart(ctx, {
     type: "bar",
@@ -766,9 +810,9 @@ function renderDateIncidents() {
 }
 
 function renderDeviceDowntime() {
-  const q = (document.getElementById("f-device").value || "").toLowerCase();
-  const type = (document.getElementById("f-type").value || "").toLowerCase();
-  const location = (document.getElementById("f-location").value || "").toLowerCase();
+  const q = ((document.getElementById("f-device") || {}).value || "").toLowerCase();
+  const type = ((document.getElementById("f-type") || {}).value || "").toLowerCase();
+  const location = ((document.getElementById("f-location") || {}).value || "").toLowerCase();
   const filtered = DEVICE_DOWNTIME.filter(d => {
     if (q && !d.device.toLowerCase().includes(q)) return false;
     if (type && d.type.toLowerCase() !== type) return false;
@@ -776,6 +820,7 @@ function renderDeviceDowntime() {
     return true;
   }).sort((a, b) => (b.minutes || 0) - (a.minutes || 0));
   const tbody = document.querySelector("#device-downtime-table tbody");
+  if (!tbody) return;
   tbody.innerHTML = "";
   for (const d of filtered) {
     const tr = document.createElement("tr");
@@ -1036,6 +1081,7 @@ function computeMonthlyUptimeMap() {
   const monthStart = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
   const elapsedMin = Math.max(1, (now - monthStart) / 60000);
   const downMin = {};
+  const downByIp = {};
   INCIDENTS.forEach(inc => {
     if (!inc || !inc.device || !inc.downDate || isNaN(inc.downDate.getTime())) return;
     const startMs = inc.downDate.getTime();
@@ -1049,14 +1095,40 @@ function computeMonthlyUptimeMap() {
     const from = Math.max(startMs, monthStart);
     const to = Math.min(endMs, now);
     if (to <= from) return;
+    const mins = (to - from) / 60000;
     const key = inc.device.trim();
-    downMin[key] = (downMin[key] || 0) + (to - from) / 60000;
+    downMin[key] = (downMin[key] || 0) + mins;
+    if (inc.ip) downByIp[inc.ip.trim()] = (downByIp[inc.ip.trim()] || 0) + mins;
   });
   Object.keys(downMin).forEach(k => {
     const pct = (1 - downMin[k] / elapsedMin) * 100;
     map[k] = Math.max(0, Math.min(100, pct));
   });
-  return map;
+
+  // Authoritative source: "Uptime (Current Month %)" column of the Downtime Report sheet.
+  // The sheet's device names match the Devices sheet, so prefer it when present.
+  const byName = {};
+  const byIp = {};
+  (DOWNTIME_REPORT || []).forEach(r => {
+    if (r.uptimeMonth === "" || r.uptimeMonth === undefined || r.uptimeMonth === null) return;
+    const v = Number(String(r.uptimeMonth).replace("%", "").replace(/,/g, ""));
+    if (isNaN(v)) return;
+    if (r.device) byName[r.device.trim()] = v;
+    if (r.ip) byIp[r.ip.trim()] = v;
+  });
+
+  // Merge into the final map (keyed by device name AND by IP)
+  const merged = {};
+  Object.keys(map).forEach(k => { merged[k] = map[k]; });
+  Object.keys(downByIp).forEach(ip => {
+    if (merged[ip] === undefined) {
+      const pct = (1 - downByIp[ip] / elapsedMin) * 100;
+      merged[ip] = Math.max(0, Math.min(100, pct));
+    }
+  });
+  Object.keys(byName).forEach(k => { merged[k] = byName[k]; });
+  Object.keys(byIp).forEach(k => { merged[k] = byIp[k]; });
+  return merged;
 }
 
 function renderDevicesTable() {
@@ -1086,18 +1158,19 @@ function renderDevicesTable() {
   if (countEl) countEl.textContent = "Showing " + shown + " of " + total;
   // Current-month uptime per device (from this month's downtime incidents)
   const monthUptime = computeMonthlyUptimeMap();
-  const hasIncidents = INCIDENTS.length > 0;
   const monthLabel = (function(){ const n = new Date(); return n.toLocaleString("en", { month: "long", year: "numeric" }); })();
   list.forEach(d => {
     const key = (d.name || "").trim();
     let muText;
-    if (hasIncidents) {
-      const mu = monthUptime[key];
-      muText = (mu === undefined ? 100 : mu).toFixed(2) + "%";
+    const mu = monthUptime[key] !== undefined ? monthUptime[key] : monthUptime[(d.ip || "").trim()];
+    if (mu !== undefined) {
+      muText = Number(mu).toFixed(2) + "%";
     } else {
-      // fallback: Downtime Report availability (also month-scoped in the sheet)
-      const rep = DOWNTIME_REPORT.find(x => (x.device || "").trim() === key);
-      muText = rep && rep.availability ? escapeHtml(rep.availability) : "-";
+      // fallback: Downtime Report availability (only if the sheet value is sane)
+      const rep = (DOWNTIME_REPORT || []).find(x => (x.device || "").trim() === key);
+      const av = rep ? Number(String(rep.availability || "").replace("%", "").replace(/,/g, "")) : NaN;
+      if (!isNaN(av) && av >= 0 && av <= 100) muText = av.toFixed(2) + "%";
+      else muText = "100.00%";
     }
     const tr = document.createElement("tr");
     tr.title = "Uptime for " + monthLabel + " (month to date)";

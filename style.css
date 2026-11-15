@@ -21,7 +21,7 @@ body {
   line-height: 1.5;
 }
 /* Full-width desktop app layout — no side margins */
-.container { width: 100%; max-width: none; margin: 0; padding: 0 12px 24px; }
+.container { width: 100%; max-width: none; margin: 0; padding: 0 0 24px; }
 .layout { display: flex; gap: 14px; align-items: flex-start; }
 /* Sidebar background = page background (var(--bg)) */
 .sidebar { width: 220px; flex: 0 0 220px; background: var(--bg); border: none; border-radius: 0; padding: 14px 10px; box-shadow: none; position: sticky; top: calc(var(--header-h, 76px) + 8px); max-height: calc(100vh - var(--header-h, 76px) - 16px); overflow-y: auto; color: var(--text); }
@@ -48,7 +48,7 @@ body {
 header.top {
   position: sticky; top: 0; z-index: 100;
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
-  gap: 12px; margin: 0 -12px 14px; padding: 12px 24px; border-radius: 0; border-top: none; border-left: none; border-right: none; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow);
+  gap: 12px; margin: 0 0 14px; padding: 12px 24px; border-radius: 0; border-top: none; border-left: none; border-right: none; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow);
 }
 header.top h1 { margin: 0; font-size: 1.5rem; color: var(--primary); font-weight: 700; }
 header.top .sub { color: var(--muted); font-size: .85rem; margin-top: 2px; }
@@ -146,7 +146,7 @@ tr.dr-detail table { min-width: 0; background: var(--card); }
 .table-wrap table { min-width: 700px; }
 footer { margin-top: 32px; color: var(--muted); font-size: .8rem; text-align: center; }
 @media (max-width: 640px) {
-  .container { padding: 0 12px 16px; }
+  .container { padding: 0 0 16px; }
   header.top h1 { font-size: 1.3rem; }
 }
 .loading { color: var(--muted); font-style: italic; }
