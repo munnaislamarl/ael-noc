@@ -1205,6 +1205,26 @@ function incDay(i) {
   return "";
 }
 
+/* Minutes of an incident that fall inside [startMs, endMs] */
+function incidentOverlapMinutes(inc, startMs, endMs) {
+  if (!inc) return 0;
+  const s = inc.downDate && !isNaN(inc.downDate.getTime()) ? inc.downDate.getTime() : null;
+  let e = null;
+  if (inc.backUp) {
+    const t = new Date(String(inc.backUp).replace(" ", "T")).getTime();
+    if (!isNaN(t)) e = t;
+  }
+  if (e === null) e = Date.now();            // ongoing outage
+  if (s === null) {
+    // no parsable start -> fall back to the stored duration
+    const f = Math.max(startMs, endMs - (inc.minutes || 0) * 60000);
+    return Math.max(0, Math.min(endMs, endMs) - Math.max(startMs, f)) / 60000;
+  }
+  const from = Math.max(s, startMs);
+  const to = Math.min(e, endMs);
+  return to > from ? (to - from) / 60000 : 0;
+}
+
 /* ---------- Device incident modal (Downtime report) ---------- */
 const DM_RANGES = [
   ["all", "All history"], ["today", "Today"], ["yesterday", "Yesterday"],
@@ -1452,6 +1472,14 @@ async function exportTable(filename, headers, rows) {
   }
 }
 
+/* Availability badge: green >= 99%, amber >= 95%, red below */
+function availCell(availStr) {
+  const v = parseFloat(String(availStr || "").replace("%", ""));
+  const cls = isNaN(v) ? "" : (v >= 99 ? "ok" : (v >= 95 ? "warn" : "bad"));
+  const txt = isNaN(v) ? "-" : v.toFixed(2) + "%";
+  return `<span class="badge ${cls}" title="Availability over the selected period">${escapeHtml(txt)}</span>`;
+}
+
 function renderDowntimeReportTable() {
   const tbody = document.querySelector("#downtime-report-table tbody");
   const dateCard = document.getElementById("dr-date-table-card");
@@ -1467,6 +1495,17 @@ function renderDowntimeReportTable() {
   const dev = (document.getElementById("dr-device")?.value || "").toLowerCase();
   const from = document.getElementById("dr-from")?.value || "";
   const to = document.getElementById("dr-to")?.value || "";
+
+  // Effective period for Availability:
+  //   - From/To given  -> that exact window
+  //   - otherwise       -> the whole span of the incidents shown (first down -> today)
+  const todayStr = localDateStr(new Date());
+  const allDays = INCIDENTS.map(incDay).filter(Boolean).sort();
+  const spanFrom = from || (allDays[0] || todayStr);
+  const spanTo = to || todayStr;
+  const pStartMs = new Date(spanFrom + "T00:00:00").getTime();
+  const pEndMs = Math.min(new Date(spanTo + "T23:59:59").getTime(), Date.now());
+  const periodMin = Math.max(1, (pEndMs - pStartMs) / 60000);
 
   // filter incidents by date/device/type for "all" view and KPIs
   const filteredInc = INCIDENTS.filter(i => {
@@ -1491,7 +1530,7 @@ function renderDowntimeReportTable() {
   if (el("kpi-dr-wentup")) el("kpi-dr-wentup").textContent = wentDown + " / " + cameUp;
   if (el("kpi-dr-total")) el("kpi-dr-total").textContent = formatDowntime(totalMin);
   if (el("kpi-dr-still")) el("kpi-dr-still").textContent = stillDown;
-  if (el("dr-period")) el("dr-period").textContent = (from || to) ? ((from || "start") + " → " + (to || "today")) : "All history";
+  if (el("dr-period")) el("dr-period").textContent = spanFrom + " → " + spanTo;
 
   // By device table (built from the filtered incidents so the date range applies)
   if (tbody) {
@@ -1502,25 +1541,24 @@ function renderDowntimeReportTable() {
       if (!groups[k]) groups[k] = { device: k, ip: i.ip, type: i.type, location: i.location, incidents: [] };
       groups[k].incidents.push(i);
     });
-    // period length (minutes) for availability
-    const todayStr = localDateStr(new Date());
-    const days = filteredInc.map(incDay).filter(Boolean).sort();
-    const pFrom = from || days[0] || todayStr;
-    const pTo = to || todayStr;
-    const pStartMs = new Date(pFrom + "T00:00:00").getTime();
-    const pEndMs = Math.min(new Date(pTo + "T23:59:59").getTime(), Date.now());
-    const periodMin = Math.max(1, (pEndMs - pStartMs) / 60000);
-    const hasRange = !!(from || to);
     DR_ROWS = Object.values(groups).map(g => {
       const down = g.incidents.length;
       const up = g.incidents.filter(i => (i.state || "").toLowerCase() !== "ongoing").length;
-      const mins = g.incidents.reduce((a, b) => a + (b.minutes || 0), 0);
-      const longest = g.incidents.reduce((a, b) => Math.max(a, b.minutes || 0), 0);
+      // downtime clipped to the selected period (so an outage spanning the
+      // period edges only counts the part inside the period)
+      let mins = 0, longest = 0;
+      g.incidents.forEach(i => {
+        const ov = incidentOverlapMinutes(i, pStartMs, pEndMs);
+        mins += ov;
+        if (ov > longest) longest = ov;
+      });
+      if (!mins) mins = g.incidents.reduce((a, b) => a + (b.minutes || 0), 0);
       const ongoing = g.incidents.some(i => (i.state || "").toLowerCase() === "ongoing");
       const devObj = DEVICES.find(x => (x.name || "").trim() === g.device);
-      const now = ongoing ? "DOWN" : (devObj ? devObj.status : "UP");
-      const avail = hasRange ? Math.max(0, Math.min(100, 100 - (mins / periodMin) * 100)).toFixed(2) + "%" : "-";
-      return Object.assign(g, { down, up, mins, longest, now, avail });
+      const statusNow = ongoing ? "DOWN" : (devObj ? devObj.status : "UP");
+      // Availability = share of the period the device was UP
+      const avail = Math.max(0, Math.min(100, 100 - (mins / periodMin) * 100)).toFixed(2) + "%";
+      return Object.assign(g, { down, up, mins, longest, now: statusNow, avail });
     }).sort((a, b) => b.mins - a.mins);
     DR_ROWS.forEach((g, idx) => {
       const tr = document.createElement("tr");
@@ -1538,7 +1576,7 @@ function renderDowntimeReportTable() {
         <td>${escapeHtml(formatDowntime(g.mins))}</td>
         <td>${Math.round(g.mins)}</td>
         <td>${escapeHtml(formatDowntime(g.longest))}</td>
-        <td>${escapeHtml(g.avail)}</td>
+        <td>${availCell(g.avail)}</td>
         <td><span class="badge ${String(g.now).toLowerCase() === "up" ? "ok" : "down"}">${escapeHtml(g.now)}</span></td>
       `;
       tbody.appendChild(tr);
